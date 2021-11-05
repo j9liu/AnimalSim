@@ -11,7 +11,6 @@ namespace BehaviorSim.BehaviorTree {
 
         protected override NodeStatus Execute()
         {
-            Debug.Log("Eating...");
 
             if (_ownerAnimal.GetTargetObject() == null) {
                 return NodeStatus.FAILURE;
@@ -19,10 +18,6 @@ namespace BehaviorSim.BehaviorTree {
 
             _ownerAnimal.Eat(_ownerAnimal.GetTargetObject());
             return NodeStatus.SUCCESS;
-        }
-
-        protected override void Exit() {
-            Debug.Log("Done eating!");
         }
     }
 }

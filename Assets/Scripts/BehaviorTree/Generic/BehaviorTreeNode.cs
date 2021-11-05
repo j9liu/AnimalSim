@@ -6,29 +6,35 @@ namespace BehaviorSim.BehaviorTree
 {
     public enum NodeStatus
     {
-        RUNNING = 0,
-        SUCCESS = 1,
-        FAILURE = 2
+        ERROR = 0,
+        UNEXECUTED = 1,
+        RUNNING = 2,
+        FAILURE = 3,
+        SUCCESS = 4,
     }
 
     public abstract class Node
     {
-        public readonly string name;
+        public readonly string Name;
 
         protected readonly bool _isLeaf;
         protected List<Node> _children;
 
         protected GameObject _owner;
+        protected Tree _ownerTree;
+
+        protected NodeStatus _status = NodeStatus.UNEXECUTED;
+
+        private UIBehaviorTreeNode _uiNode = null;
+
         public Node(string n, bool isLeaf)
         {
-            name = n;
+            Name = n;
             _isLeaf = isLeaf;
         }
 
-        public virtual NodeStatus Tick()
-        {
-            return NodeStatus.SUCCESS; 
-        }
+        public abstract NodeStatus Tick();
+
         public virtual void AddChild(Node node)
         {
             if (_isLeaf)
@@ -47,6 +53,30 @@ namespace BehaviorSim.BehaviorTree
             }
         }
 
+        public bool HasChildren()
+        {
+            return (!_isLeaf && _children != null && _children.Count > 0);
+        }
+
+        public Node GetChild(int index)
+        {
+            if (_isLeaf)
+            {
+                Debug.LogError("Error: attempted to get a child of a leaf node.");
+            }
+
+            if (index < 0 || _children == null || index > _children.Count) {
+                Debug.LogError("Error: attempted to get a child with out of range index.");
+            }
+
+            return _children[index];
+        }
+
+        public List<Node> GetChildren()
+        {
+            return _children;
+        }
+
         public virtual void RemoveChild(Node node)
         {
             if (_isLeaf)
@@ -60,13 +90,28 @@ namespace BehaviorSim.BehaviorTree
             }
         }
 
-        public virtual void SetOwner(GameObject owner) {
+        public virtual void SetOwner(GameObject owner, Tree tree)
+        {
             _owner = owner;
+            _ownerTree = tree;
             if (_children != null) {
                 foreach(Node child in _children) {
-                    child.SetOwner(owner);
+                    child.SetOwner(owner, tree);
                 }
             }
+        }
+
+        protected void SetStatus(NodeStatus status)
+        {
+            _status = status;
+            if (_ownerTree.Selected && _uiNode != null)
+            {
+                _uiNode.ChangeColor(_status);
+            }
+        }
+
+        public void SetUIPointer(UIBehaviorTreeNode uiNode) {
+            _uiNode = uiNode;
         }
     }
 }

@@ -14,9 +14,28 @@ namespace BehaviorSim
 
     public class Animal : MonoBehaviour
     {
-        public static readonly float MaxHunger = 100.0f;
-        public static readonly float MaxThirst = 100.0f;
-        public static readonly float MaxHealth = 100.0f;
+        protected AnimalType _type;
+
+        protected BehaviorTree.Tree _behaviorTree;
+        protected GameObject _targetObject;
+
+        public Global global;
+
+        protected float _food;
+        protected float _water;
+        protected float _health;
+
+        public readonly float maxFood; // Not const, different species have diff. stomach capacities
+        public readonly float maxWater;
+        public readonly float maxHealth;
+
+        private float _healthDecayTimer;
+        private const float _healthDecayRate = 10.0f;
+        private const float _healthDecayAmount = 5.0f;
+
+        private float _foodDecayTimer;
+        private const float _foodDecayRate = 7.0f;
+        private const float _foodDecayAmount = 5.0f;
 
         protected float _speed;
         protected float _angularSpeed;
@@ -25,34 +44,33 @@ namespace BehaviorSim
         protected float _sightFOV;
         protected float _sightRadius;
 
-        protected float _hunger;
-        protected float _thirst;
-        protected float _health;
+        public Animal(float maxFoodValue, float maxWaterValue, float maxHealthValue)
+        {
+            maxFood = maxFoodValue;
+            maxWater = maxWaterValue;
+            maxHealth = maxHealthValue;
+        }
 
-        protected AnimalType _type;
-        // If this animal is eaten by another animal, this specifies
-        // by how much to fill the predator's hunger bar.
-        protected float _foodValue;
-
-        protected GameObject _targetObject;
-
-        protected BehaviorTree.Tree _behaviorTree;
-
-        public Global global;
-        
-        // Update is called once per frame
         protected void Update()
         {
-            _behaviorTree.Tick();
+            HandleStatDecay();
+
+            if (_health == 0)
+            {
+                Die();
+            }
+            else {
+                _behaviorTree.Tick();
+            }
         }
 
         public float GetHealth() {
             return _health;
         }
 
-        public float GetHunger()
+        public float GetFood()
         {
-            return _hunger;
+            return _food;
         }
 
         public float GetSightFOV() {
@@ -73,6 +91,29 @@ namespace BehaviorSim
 
         public void SetTargetObject(GameObject obj) {
             _targetObject = obj;
+        }
+        private void HandleStatDecay()
+        {
+            _foodDecayTimer += Time.deltaTime;
+            if (_foodDecayTimer > _foodDecayRate)
+            {
+                _foodDecayTimer = 0;
+                _food = Mathf.Max(_food - _foodDecayAmount, 0.0f);
+            }
+
+            if (_food == 0 || _water == 0)
+            {
+                _healthDecayTimer += Time.deltaTime;
+                if (_healthDecayTimer > _healthDecayRate)
+                {
+                    _healthDecayTimer = 0;
+                    _health = Mathf.Max(_health - _healthDecayAmount, 0.0f);
+                }
+            }
+            else
+            {
+                _healthDecayTimer = 0;
+            }
         }
 
         public bool IsNearPosition(Vector3 position, float epsilon) {
@@ -97,7 +138,7 @@ namespace BehaviorSim
 
         public void Eat(GameObject foodObject) {
             Food targetFood = foodObject.GetComponent<Food>();
-            _hunger = Mathf.Min(_hunger + targetFood.foodValue, Animal.MaxHunger);
+            _food = Mathf.Min(_food + targetFood.FoodValue, maxFood);
             Destroy(foodObject);
             _targetObject = null;
         }
@@ -105,6 +146,27 @@ namespace BehaviorSim
         /*protected void RunFromPosition() {
         
         }*/
+
+        public void Deselect() {
+            _behaviorTree.Selected = false;
+        }
+
+        // TODO: add other debug things, such as FOV or direction visualizer.
+        public void Select() {
+            _behaviorTree.Selected = true;
+        }
+
+        // When an animal dies, it leaves a corpse for predators to eat.
+        public void Die() {
+            // TODO: disable self so it doesn't have collision,
+            // then instantiate corpse prefab.
+            Destroy(gameObject);
+        }
+
+        // Simply destroys the game object
+        public void Delete() {
+            Destroy(gameObject);
+        }
     }
 
 }

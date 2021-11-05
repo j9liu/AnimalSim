@@ -1,58 +1,58 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace BehaviorSim
 {
-
     public class Global : MonoBehaviour
     {
-        public GameObject food;
-        public GameObject squirrel;
+        [SerializeField]
+        private GameObject acorn;
 
-        public float foodSpawnTimer;
-        public float foodSpawnRate; // The rate at which food spawns, in seconds
+        [SerializeField]
+        private GameObject squirrel;
 
         private Ground _ground;
+        private UIManager _uiManager;
+        private GameObject _animalsObject;
+        private GameObject _foodObject;
+
+        private EventSystem _eventSystem;
+
+        private List<Animal> _animals;
+
+        private float _acornSpawnTimer;
+        public float acornSpawnRate; // The rate at which acorns spawns, in seconds
 
         private const int _animalLayerMask = 1 << 8;
-        private Animal _selectedAnimal;
-
-        private StatusBar _healthBar;
-        private StatusBar _hungerBar;
-        private StatusBar _thirstBar;
 
         // Start is called before the first frame update
         void Start()
         {
-            // Find and set variables corresponding to ground
             GameObject groundObject = GameObject.Find("Ground");
             _ground = groundObject.GetComponent<Ground>();
 
-            // Food spawn rate
-            foodSpawnTimer = 0.0f;
-            foodSpawnRate = 5.0f;
+            GameObject canvasObject = GameObject.Find("Canvas");
+            _uiManager = canvasObject.GetComponent<UIManager>();
 
-            // Empty variables related to animal selection
-            _selectedAnimal = null;
+            _animalsObject = GameObject.Find("Animals");
+            _foodObject = GameObject.Find("Food");
 
-            GameObject healthBarObject = GameObject.Find("HealthBar");
-            _healthBar = healthBarObject.GetComponent<StatusBar>();
-            _healthBar.SetMaxValue(Animal.MaxHealth);
-            _healthBar.SetActive(false);
+            GameObject eventSystemObject = GameObject.Find("EventSystem");
+            _eventSystem = eventSystemObject.GetComponent<EventSystem>();
 
-            GameObject hungerBarObject = GameObject.Find("HungerBar");
-            _hungerBar = hungerBarObject.GetComponent<StatusBar>();
-            _hungerBar.SetMaxValue(Animal.MaxHunger);
-            _hungerBar.SetActive(false);
+            // Set up timers
+            _acornSpawnTimer = 0.0f;
+            acornSpawnRate = 5.0f;
 
             // Populate the world with animals
             SpawnAnimals();
 
             // Hardcoded spawn of some acorns at the beginning of the simulation
             for (int i = 0; i < 5; i++) {
-                Vector3 spawnPosition = _ground.GetRandomPositionForFood(food);
-                Instantiate(food, spawnPosition, Quaternion.identity);
+                Vector3 spawnPosition = _ground.GetRandomPositionForFood(acorn);
+                Instantiate(acorn, spawnPosition, Quaternion.identity);
             }
         }
 
@@ -61,7 +61,6 @@ namespace BehaviorSim
         {
             HandleMouseInput();
             SpawnFood();
-            UpdateGUI();
         }
 
         public Ground GetGround()
@@ -69,52 +68,54 @@ namespace BehaviorSim
             return _ground;
         }
 
-        void HandleMouseInput() {
-            if (Input.GetMouseButtonDown(0)) {
+        private void HandleMouseInput() {
+            if (Input.GetMouseButtonDown(0))
+            {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit, 1000.0f, _animalLayerMask))
                 {
-                    _selectedAnimal = hit.collider.gameObject.GetComponent<Animal>();
-                    _healthBar.SetActive(true);
-                    _hungerBar.SetActive(true);
+                    Animal selectedAnimal = hit.collider.gameObject.GetComponent<Animal>();
+                    _uiManager.SelectAnimal(selectedAnimal);
                 }
-                else {
-                    _selectedAnimal = null;
-                    _healthBar.SetActive(false);
-                    _hungerBar.SetActive(false);
+                else
+                {
+                    GameObject clickedObject = _eventSystem.currentSelectedGameObject;
+                    if (clickedObject == null || clickedObject.GetComponent<Ground>() != null)
+                    {
+                        _uiManager.Deselect();
+                    }
                 }
             }
         }
 
-        void SpawnFood()
+        private void SpawnFood()
         {
-            foodSpawnTimer += Time.deltaTime;
-            if (foodSpawnTimer >= foodSpawnRate)
+            _acornSpawnTimer += Time.deltaTime;
+            if (_acornSpawnTimer >= acornSpawnRate)
             {
-                Vector3 spawnPosition = _ground.GetRandomPositionForFood(food);
-                Instantiate(food, spawnPosition, Quaternion.identity);
-                foodSpawnTimer = 0.0f;
+                Vector3 spawnPosition = _ground.GetRandomPositionForFood(acorn);
+                Instantiate(acorn, spawnPosition, Quaternion.identity);
+                _acornSpawnTimer = 0.0f;
             }
         }
 
-        void UpdateGUI() {
-            if (_selectedAnimal == null) {
-                return;
+        // TODO: add UI so that the player can specify the initial populations
+        // of animals and reuse this function
+        public void SpawnAnimals() {
+            if (_animals == null) {
+                _animals = new List<Animal>();
             }
-            _healthBar.SetCurrentValue(_selectedAnimal.GetHealth());
-            _hungerBar.SetCurrentValue(_selectedAnimal.GetHunger());
+
+            /*if (_animals.Count > 0) {
+                // TODO: Clear list properly
+            }*/
+
+            GameObject currentAnimal = Instantiate(squirrel, new Vector3(0, 3.5f, 0), Quaternion.identity);
+            Squirrel currentComponent = currentAnimal.GetComponent<Squirrel>();
+            currentComponent.global = this;
+            _animals.Add(currentComponent);
         }
-
-        void SpawnAnimals() {
-            GameObject current = Instantiate(squirrel, new Vector3(0, 3.5f, 0), Quaternion.identity);
-            current.GetComponent<Squirrel>().global = this;
-        }
-
-        // TODO: 
-        /*bool ValidatePosition(Vector3 pos) { 
-
-        }*/
 
     }
 }

@@ -13,7 +13,6 @@ namespace BehaviorSim.BehaviorTree {
 
         protected override void Enter()
         {
-            Debug.Log("Going to food...");
             _referencePoint = _ownerAnimal.GetTargetObject().transform.position;
         }
 

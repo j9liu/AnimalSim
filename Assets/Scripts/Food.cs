@@ -9,7 +9,17 @@ namespace BehaviorSim {
 
     public class Food : MonoBehaviour
     {
-        public FoodType type;
-        public float foodValue;
+        [SerializeField]
+        private FoodType _type;
+        public readonly float FoodValue;
+
+        private float _consumeRate;
+        private float _consuemAmount;
+
+        private GameObject _consumer;
+
+        public void SetConsumer(GameObject consumer) {
+            _consumer = consumer;
+        }
     }
 }

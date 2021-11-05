@@ -29,6 +29,7 @@ namespace BehaviorSim.BehaviorTree {
                     NodeStatus result = _activeChild.Tick();
                     switch (result) {
                         case NodeStatus.RUNNING:
+                            SetStatus(result);
                             return result;
                         case NodeStatus.SUCCESS:
                             _activeChildIndex++;
@@ -36,6 +37,7 @@ namespace BehaviorSim.BehaviorTree {
                         case NodeStatus.FAILURE:
                             _activeChild = null;
                             _activeChildIndex = -1;
+                            SetStatus(result);
                             return result;
 
                     }
@@ -44,6 +46,7 @@ namespace BehaviorSim.BehaviorTree {
 
             _activeChild = null;
             _activeChildIndex = -1;
+            SetStatus(NodeStatus.SUCCESS);
             return NodeStatus.SUCCESS;
         }
     }

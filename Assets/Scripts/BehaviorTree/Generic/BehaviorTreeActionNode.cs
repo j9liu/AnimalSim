@@ -6,12 +6,15 @@ namespace BehaviorSim.BehaviorTree
 {
     public class ActionNode : Node
     {
-        public ActionNode(string name) : base(name, true) {
+        public ActionNode(string name) : base(name, true)
+        {
             _children = null;
         }
 
         private bool _running = false;
+
         protected virtual void Enter() { }
+        
         protected virtual void Exit() { }
 
         protected virtual NodeStatus Execute() {
@@ -25,6 +28,7 @@ namespace BehaviorSim.BehaviorTree
                 Enter();
                 _running = true;
             }
+
             if (_running) {
                 result = Execute();
                 if (result != NodeStatus.RUNNING) {
@@ -33,6 +37,8 @@ namespace BehaviorSim.BehaviorTree
                 }
             }
 
+            SetStatus(result);
+            
             return result;
         }
     }

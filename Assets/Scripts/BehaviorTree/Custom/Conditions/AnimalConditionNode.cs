@@ -12,9 +12,9 @@ namespace BehaviorSim.BehaviorTree
         {
         }
 
-        public override void SetOwner(GameObject owner)
+        public override void SetOwner(GameObject owner, Tree tree)
         {
-            base.SetOwner(owner);
+            base.SetOwner(owner, tree);
             _ownerAnimal = owner.GetComponent<Animal>();
         }
     }

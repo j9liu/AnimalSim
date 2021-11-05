@@ -16,7 +16,6 @@ namespace BehaviorSim.BehaviorTree {
          */
         protected override NodeStatus Execute()
         {
-            Debug.Log("Finding food...");
             float radius = _ownerAnimal.GetSightRadius();
             float halfFOV    = _ownerAnimal.GetSightFOV() / 2.0f;
             float minDistance = 2.0f * radius;

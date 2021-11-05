@@ -17,7 +17,9 @@ namespace BehaviorSim.BehaviorTree
 
         public override NodeStatus Tick()
         {
-            return Condition() ? NodeStatus.SUCCESS : NodeStatus.FAILURE;
+            NodeStatus result = Condition() ? NodeStatus.SUCCESS : NodeStatus.FAILURE;
+            SetStatus(result);
+            return result;
         }
     }
 
