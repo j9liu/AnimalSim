@@ -20,19 +20,31 @@ namespace BehaviorSim.BehaviorTree
             return _root;
         }
 
+        public void Select()
+        {
+            Queue<Node> queue = new Queue<Node>();
+            queue.Enqueue(_root);
+            int index = 1;
+            while (queue.Count > 0)
+            {
+                Node current = queue.Dequeue();
+                _uiNodes[index].ChangeColor(current.GetStatus());
+                List<Node> children = current.GetChildren();
+                if (children != null)
+                {
+                    for (int i = 0; i < children.Count; i++)
+                    {
+                        queue.Enqueue(children[i]);
+                    }
+                }
+
+                index++;
+            }
+        }
+
         public void SetRoot(Node root)
         {
             _root = root;
-        }
-
-        public void Tick()
-        {
-            if (_root != null) {
-                NodeStatus result = _root.Tick();
-                if (Selected && (result != NodeStatus.RUNNING || result == NodeStatus.ERROR)) {
-                    ResetUINodeColors();
-                }
-            }
         }
 
         public void SetOwner(GameObject owner)
@@ -61,6 +73,18 @@ namespace BehaviorSim.BehaviorTree
                 }
 
                 index++;
+            }
+        }
+
+        public void Tick()
+        {
+            if (_root != null)
+            {
+                NodeStatus result = _root.Tick();
+                if (Selected && (result != NodeStatus.RUNNING || result == NodeStatus.ERROR))
+                {
+                    ResetUINodeColors();
+                }
             }
         }
 

@@ -5,18 +5,22 @@ using UnityEngine;
 namespace BehaviorSim.BehaviorTree {
     public class EatFoodNode : AnimalActionNode
     {
+
         public EatFoodNode() : base("Eat Food")
+        {
+
+        }
+
+        protected override void Enter()
         {
         }
 
         protected override NodeStatus Execute()
         {
-
-            if (_ownerAnimal.GetTargetObject() == null) {
-                return NodeStatus.FAILURE;
+            if (_ownerAnimal.EatTargetFood()) {
+                return NodeStatus.RUNNING;
             }
 
-            _ownerAnimal.Eat(_ownerAnimal.GetTargetObject());
             return NodeStatus.SUCCESS;
         }
     }

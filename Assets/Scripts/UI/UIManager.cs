@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using BehaviorSim.BehaviorTree;
+using UnityEngine.UI;
 
 namespace BehaviorSim {
     public class UIManager : MonoBehaviour
@@ -19,9 +19,13 @@ namespace BehaviorSim {
         private GameObject _statsPanel;
         private GameObject _behaviorTreePanel;
 
+        private bool _behaviorTreePanelActive;
+
         private StatusBar _healthBar;
         private StatusBar _foodBar;
         private StatusBar _waterBar;
+
+        private Text _behaviorTreeButtonText;
 
         // Start is called before the first frame update
         void Start()
@@ -43,6 +47,9 @@ namespace BehaviorSim {
 
             _uiTrees = new List<GameObject>();
             _uiTrees.Add(_content.transform.GetChild(0).gameObject);
+
+            Transform buttonTransform = _statsPanel.transform.GetChild(2);
+            _behaviorTreeButtonText = buttonTransform.GetChild(0).gameObject.GetComponent<Text>();
         }
 
         // Update is called once per frame
@@ -50,46 +57,63 @@ namespace BehaviorSim {
         {
             if (_selectedAnimal != null)
             {
-                _healthBar.SetCurrentValue(_selectedAnimal.GetHealth());
-                _foodBar.SetCurrentValue(_selectedAnimal.GetFood());
+                _healthBar.SetCurrentValue(_selectedAnimal.Health);
+                _foodBar.SetCurrentValue(_selectedAnimal.Food);
             }
         }
 
-        public bool HasSelectedAnimal() {
+        public bool HasSelectedAnimal()
+        {
             return _selectedAnimal != null;
         }
 
-        public void SelectAnimal(Animal animal) {
-            if (animal != null) {
-                _selectedAnimal = animal;
-                _selectedAnimal.Select();
-                _statsPanel.SetActive(true);
-                _healthBar.SetMaxValue(_selectedAnimal.maxHealth);
-                _foodBar.SetMaxValue(_selectedAnimal.maxFood);
-                _waterBar.SetMaxValue(_selectedAnimal.maxWater);
+        public void SelectAnimal(Animal animal)
+        {
+            if (animal == null)
+            {
+                return;
+            }
+
+            _selectedAnimal = animal;
+            _selectedAnimal.Select();
+            _statsPanel.SetActive(true);
+            _healthBar.SetMaxValue(_selectedAnimal.Stats.MaxHealth);
+            _foodBar.SetMaxValue(_selectedAnimal.Stats.MaxFood);
+            _waterBar.SetMaxValue(_selectedAnimal.Stats.MaxWater);
+        }
+
+        public void ToggleBehaviorTreePanel()
+        {
+            if (_behaviorTreePanelActive)
+            {
+                HideBehaviorTreePanel();
+            }
+            else
+            {
+                _behaviorTreePanel.SetActive(true);
+                _behaviorTreeButtonText.text = "Hide Behavior Tree";
             }
         }
 
-        public void SwitchToStatsPanel() {
-            _statsPanel.SetActive(true);
+        public void HideBehaviorTreePanel()
+        {
             _behaviorTreePanel.SetActive(false);
+            _behaviorTreeButtonText.text = "Show Behavior Tree";
         }
 
-        public void SwitchToBehaviorTreePanel() {
-            _statsPanel.SetActive(false);
-            _behaviorTreePanel.SetActive(true);
-        }
-
-        public void Deselect() {
-            if (_selectedAnimal != null) {
+        public void Deselect()
+        {
+            if (_selectedAnimal != null)
+            {
                 _selectedAnimal.Deselect();
             }
             _selectedAnimal = null;
             _statsPanel.SetActive(false);
-            _behaviorTreePanel.SetActive(false);
+            HideBehaviorTreePanel();
         }
 
-        public GameObject GetUITree(AnimalType animal) {
+        public GameObject GetUITree(AnimalType animal)
+        {
             int index = (int)animal;
             return _uiTrees[index];
         }

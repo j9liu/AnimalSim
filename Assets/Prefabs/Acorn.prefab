@@ -125,5 +125,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce0785921384f1142b04e51e0e425f8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 0
-  foodValue: 10
+  _type: 1
+  _currentFoodValue: 30
+  _portionConsumeRate: 4
+  _portionAmount: 15

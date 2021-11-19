@@ -14,7 +14,7 @@ namespace BehaviorSim.BehaviorTree
 
         protected override bool Condition()
         {
-            return (_ownerAnimal.GetFood() / _ownerAnimal.maxFood) <= _threshold;
+            return (_ownerAnimal.Food / _ownerAnimal.Stats.MaxFood) <= _threshold;
         }
     }
 }

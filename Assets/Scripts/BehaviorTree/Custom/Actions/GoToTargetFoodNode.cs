@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace BehaviorSim.BehaviorTree {
-    public class GoToFoodNode : AnimalActionNode
+    public class GoToTargetFoodNode : AnimalActionNode
     {
 
-        private const float _goToFoodEpsilon = 3.0f;
-        public GoToFoodNode() : base("Go To Food")
+        private const float _targetEpsilon = 3.0f;
+
+        public GoToTargetFoodNode() : base("Go To Target Food")
         {
         }
 
@@ -23,8 +24,9 @@ namespace BehaviorSim.BehaviorTree {
                 return NodeStatus.FAILURE;
             }
 
-            if (_ownerAnimal.IsNearPosition(_referencePoint, _goToFoodEpsilon))
+            if (_ownerAnimal.IsNearPosition2D(_referencePoint, _targetEpsilon))
             {
+
                 return NodeStatus.SUCCESS;
             }
 

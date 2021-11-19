@@ -11,7 +11,7 @@ namespace BehaviorSim.BehaviorTree {
             SequenceNode hungerRoot = new SequenceNode("Hunger Subtree");
             hungerRoot.AddChild(new FoodLowNode(0.6f));
             hungerRoot.AddChild(new FindNearbyFoodNode());
-            hungerRoot.AddChild(new GoToFoodNode());
+            hungerRoot.AddChild(new GoToTargetFoodNode());
             hungerRoot.AddChild(new EatFoodNode());
 
             _root = new SelectorNode("Root");

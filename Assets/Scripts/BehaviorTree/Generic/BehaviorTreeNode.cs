@@ -77,6 +77,9 @@ namespace BehaviorSim.BehaviorTree
             return _children;
         }
 
+        public NodeStatus GetStatus() {
+            return _status;
+        }
         public virtual void RemoveChild(Node node)
         {
             if (_isLeaf)

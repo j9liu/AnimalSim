@@ -8,10 +8,15 @@ namespace BehaviorSim
     public class Global : MonoBehaviour
     {
         [SerializeField]
-        private GameObject acorn;
+        private GameObject _acorn;
 
         [SerializeField]
-        private GameObject squirrel;
+        private GameObject _squirrel;
+
+        [SerializeField]
+        private GameObject _squirrelCorpse;
+
+        public int InitialSquirrelPopulation = 1;
 
         private Ground _ground;
         private UIManager _uiManager;
@@ -25,10 +30,11 @@ namespace BehaviorSim
         private float _acornSpawnTimer;
         public float acornSpawnRate; // The rate at which acorns spawns, in seconds
 
-        private const int _animalLayerMask = 1 << 8;
+        public const int UILayer = 5;
+        public const int AnimalLayerMask = 1 << 8;
 
         // Start is called before the first frame update
-        void Start()
+        public void Start()
         {
             GameObject groundObject = GameObject.Find("Ground");
             _ground = groundObject.GetComponent<Ground>();
@@ -51,13 +57,13 @@ namespace BehaviorSim
 
             // Hardcoded spawn of some acorns at the beginning of the simulation
             for (int i = 0; i < 5; i++) {
-                Vector3 spawnPosition = _ground.GetRandomPositionForFood(acorn);
-                Instantiate(acorn, spawnPosition, Quaternion.identity);
+                Vector3 spawnPosition = _ground.GetRandomPositionForObject(_acorn);
+                Instantiate(_acorn, spawnPosition, Quaternion.identity, _foodObject.transform);
             }
         }
 
         // Update is called once per frame
-        void Update()
+        public void Update()
         {
             HandleMouseInput();
             SpawnFood();
@@ -71,19 +77,24 @@ namespace BehaviorSim
         private void HandleMouseInput() {
             if (Input.GetMouseButtonDown(0))
             {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, 1000.0f, _animalLayerMask))
+                if (!EventSystem.current.IsPointerOverGameObject())
                 {
-                    Animal selectedAnimal = hit.collider.gameObject.GetComponent<Animal>();
-                    _uiManager.SelectAnimal(selectedAnimal);
-                }
-                else
-                {
-                    GameObject clickedObject = _eventSystem.currentSelectedGameObject;
-                    if (clickedObject == null || clickedObject.GetComponent<Ground>() != null)
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    RaycastHit hit;
+
+                    if (Physics.Raycast(ray, out hit, 1000.0f, AnimalLayerMask))
                     {
                         _uiManager.Deselect();
+                        Animal selectedAnimal = hit.collider.gameObject.GetComponent<Animal>();
+                        _uiManager.SelectAnimal(selectedAnimal);
+                    }
+                    else
+                    {
+                        GameObject clickedObject = _eventSystem.currentSelectedGameObject;
+                        if (clickedObject == null || clickedObject.GetComponent<Ground>() != null)
+                        {
+                            _uiManager.Deselect();
+                        }
                     }
                 }
             }
@@ -94,9 +105,19 @@ namespace BehaviorSim
             _acornSpawnTimer += Time.deltaTime;
             if (_acornSpawnTimer >= acornSpawnRate)
             {
-                Vector3 spawnPosition = _ground.GetRandomPositionForFood(acorn);
-                Instantiate(acorn, spawnPosition, Quaternion.identity);
+                Vector3 spawnPosition = _ground.GetRandomPositionForObject(_acorn);
+                GameObject currentAcorn = Instantiate(_acorn, spawnPosition, Quaternion.identity, _foodObject.transform);
                 _acornSpawnTimer = 0.0f;
+            }
+        }
+
+        public void SpawnCorpse(AnimalType type, Vector3 spawnPosition) {
+            switch (type) {
+                case AnimalType.SQUIRREL:
+                    Instantiate(_squirrelCorpse, spawnPosition, Quaternion.identity, _foodObject.transform);
+                    break;
+                case AnimalType.FOX:
+                    break;
             }
         }
 
@@ -107,14 +128,19 @@ namespace BehaviorSim
                 _animals = new List<Animal>();
             }
 
-            /*if (_animals.Count > 0) {
-                // TODO: Clear list properly
-            }*/
+            if (_animals.Count > 0) {
+                // TODO: reset animals
+            }
 
-            GameObject currentAnimal = Instantiate(squirrel, new Vector3(0, 3.5f, 0), Quaternion.identity);
-            Squirrel currentComponent = currentAnimal.GetComponent<Squirrel>();
-            currentComponent.global = this;
-            _animals.Add(currentComponent);
+            for (int i = _animals.Count; i < InitialSquirrelPopulation; i++) {
+                Vector3 spawnPosition = _ground.GetRandomPositionForObject(_squirrel);
+                float spawnAngle = Random.Range(-180, 180);
+                Quaternion spawnRotation = Quaternion.AngleAxis(spawnAngle, _squirrel.transform.up);
+                GameObject currentAnimal = Instantiate(_squirrel, spawnPosition, spawnRotation, _animalsObject.transform);
+                Squirrel currentComponent = currentAnimal.GetComponent<Squirrel>();
+                currentComponent.global = this;
+                _animals.Add(currentComponent);
+            }
         }
 
     }
