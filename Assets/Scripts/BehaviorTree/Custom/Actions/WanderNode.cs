@@ -46,7 +46,7 @@ namespace BehaviorSim.BehaviorTree {
 
             if (_ownerAnimal.IsNearPosition2D(_referencePoint, _wanderEpsilon))
             {
-                return NodeStatus.SUCCESS;                
+                return NodeStatus.SUCCESS;
             }
 
             return NodeStatus.RUNNING;

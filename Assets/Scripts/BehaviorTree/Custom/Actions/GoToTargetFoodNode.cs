@@ -14,7 +14,7 @@ namespace BehaviorSim.BehaviorTree {
 
         protected override void Enter()
         {
-            _referencePoint = _ownerAnimal.GetTargetObject().transform.position;
+            _referencePoint = _ownerAnimal.GetTargetFood().transform.position;
         }
 
         protected override NodeStatus Execute()

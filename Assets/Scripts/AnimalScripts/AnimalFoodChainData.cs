@@ -27,5 +27,6 @@ namespace BehaviorSim
     public static class AnimalFoodChainDataTypes
     {
         public static AnimalFoodChainData SquirrelFoodChainData = new AnimalFoodChainData(AnimalType.SQUIRREL);
+        public static AnimalFoodChainData FoxFoodChainData = new AnimalFoodChainData(AnimalType.FOX);
     }
 }

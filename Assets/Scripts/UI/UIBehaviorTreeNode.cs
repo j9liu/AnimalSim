@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace BehaviorSim {
@@ -20,6 +18,10 @@ namespace BehaviorSim {
 
         public void ChangeColor(BehaviorTree.NodeStatus status) {
             int index = (int)status;
+            if (_image == null)
+            {
+                _image = gameObject.GetComponent<Image>();
+            }
             _image.color = StatusColors[index];
         }
     }

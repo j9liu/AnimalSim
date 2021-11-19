@@ -33,9 +33,7 @@ namespace BehaviorSim {
             _selectedAnimal = null;
 
             _statsPanel = transform.GetChild(0).gameObject;
-            _statsPanel.SetActive(false);
             _behaviorTreePanel = transform.GetChild(1).gameObject;
-            _behaviorTreePanel.SetActive(false);
 
             Transform statusBarsTransform = _statsPanel.transform.GetChild(1);
             _healthBar = statusBarsTransform.GetChild(0).gameObject.GetComponent<StatusBar>();
@@ -47,9 +45,18 @@ namespace BehaviorSim {
 
             _uiTrees = new List<GameObject>();
             _uiTrees.Add(_content.transform.GetChild(0).gameObject);
+            _uiTrees.Add(_content.transform.GetChild(1).gameObject);
+
+            for (int i = 0; i < _uiTrees.Count; i++)
+            {
+                _uiTrees[i].SetActive(false);
+            }
 
             Transform buttonTransform = _statsPanel.transform.GetChild(2);
             _behaviorTreeButtonText = buttonTransform.GetChild(0).gameObject.GetComponent<Text>();
+
+            _statsPanel.SetActive(false);
+            _behaviorTreePanel.SetActive(false);
         }
 
         // Update is called once per frame
@@ -76,6 +83,16 @@ namespace BehaviorSim {
 
             _selectedAnimal = animal;
             _selectedAnimal.Select();
+
+            switch (_selectedAnimal.Type) {
+                case AnimalType.SQUIRREL:
+                    _uiTrees[0].SetActive(true);
+                    break;
+                case AnimalType.FOX:
+                    _uiTrees[1].SetActive(true);
+                    break;
+            }
+
             _statsPanel.SetActive(true);
             _healthBar.SetMaxValue(_selectedAnimal.Stats.MaxHealth);
             _foodBar.SetMaxValue(_selectedAnimal.Stats.MaxFood);
@@ -92,24 +109,45 @@ namespace BehaviorSim {
             {
                 _behaviorTreePanel.SetActive(true);
                 _behaviorTreeButtonText.text = "Hide Behavior Tree";
+                int index = (int)_selectedAnimal.Type;
+                _uiTrees[index].SetActive(true);
+
             }
+
+            _behaviorTreePanelActive = !_behaviorTreePanelActive;
         }
 
         public void HideBehaviorTreePanel()
         {
+            if (_selectedAnimal != null) {
+                int index = (int)_selectedAnimal.Type;
+                _uiTrees[index].SetActive(false);
+            }
+            _behaviorTreePanelActive = false;
             _behaviorTreePanel.SetActive(false);
             _behaviorTreeButtonText.text = "Show Behavior Tree";
         }
 
         public void Deselect()
         {
-            if (_selectedAnimal != null)
-            {
-                _selectedAnimal.Deselect();
-            }
-            _selectedAnimal = null;
             _statsPanel.SetActive(false);
             HideBehaviorTreePanel();
+
+            if (_selectedAnimal != null)
+            {
+                switch (_selectedAnimal.Type)
+                {
+                    case AnimalType.SQUIRREL:
+                        _uiTrees[0].SetActive(false);
+                        break;
+                    case AnimalType.FOX:
+                        _uiTrees[1].SetActive(false);
+                        break;
+                }
+                _selectedAnimal.Deselect();
+            }
+
+            _selectedAnimal = null;
         }
 
         public GameObject GetUITree(AnimalType animal)

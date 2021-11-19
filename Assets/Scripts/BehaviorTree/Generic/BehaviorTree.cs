@@ -81,7 +81,7 @@ namespace BehaviorSim.BehaviorTree
             if (_root != null)
             {
                 NodeStatus result = _root.Tick();
-                if (Selected && (result != NodeStatus.RUNNING || result == NodeStatus.ERROR))
+                if (Selected && (result != NodeStatus.RUNNING))
                 {
                     ResetUINodeColors();
                 }

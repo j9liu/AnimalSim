@@ -7,7 +7,7 @@ namespace BehaviorSim.BehaviorTree
     public class GoToTargetAnimalNode : AnimalActionNode
     {
 
-        private const float _targetEpsilon = 3.0f;
+        private const float _targetEpsilon = 8.0f;
 
         public GoToTargetAnimalNode() : base("Chase Animal")
         {
@@ -15,17 +15,18 @@ namespace BehaviorSim.BehaviorTree
 
         protected override void Enter()
         {
-            _referencePoint = _ownerAnimal.GetTargetObject().transform.position;
+            _targetObject = _ownerAnimal.GetTargetObject();
         }
 
         protected override NodeStatus Execute()
         {
-            if (!_ownerAnimal.MoveToPosition(_referencePoint))
+            Vector3 targetPosition = _targetObject.transform.position;
+            if (!_ownerAnimal.MoveToPosition(targetPosition))
             {
                 return NodeStatus.FAILURE;
             }
 
-            if (_ownerAnimal.IsNearPosition(_referencePoint, _targetEpsilon))
+            if (_ownerAnimal.IsNearPosition2D(targetPosition, _targetEpsilon))
             {
                 return NodeStatus.SUCCESS;
             }

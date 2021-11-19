@@ -37,7 +37,8 @@ namespace BehaviorSim
         protected BehaviorTree.Tree _behaviorTree;
 
         protected GameObject _targetObject;
-        protected Food _targetFood;
+        protected Food       _targetFood;
+        protected Animal     _targetAnimal;
 
         public Global global;
 
@@ -77,8 +78,15 @@ namespace BehaviorSim
         private float _eatTimer;
 
         protected Vector3 _direction;
-
         protected GameObject _debugArrowObject;
+
+        public bool _selected = false;
+        public bool Selected
+        {
+            get {
+                return _selected;
+            }
+        }
 
         public Animal()
         {
@@ -97,29 +105,59 @@ namespace BehaviorSim
             }
         }
 
-        public Vector3 GetDirection() {
+        public Vector3 GetDirection()
+        {
             return _direction;
         }
+
+        public float GetFoodPercentage()
+        {
+            return _food / Stats.MaxFood;
+        }
+
+        public float GetHealthPercentage()
+        {
+            return _health / Stats.MaxHealth;
+        }
+
+        public float GetWaterPercentage()
+        {
+            return _water / Stats.MaxWater;
+        }
+
+        public Animal GetTargetAnimal() {
+            return _targetAnimal;
+        }
+
         public Food GetTargetFood()
         {
             return _targetFood;
         }
 
-        public GameObject GetTargetObject() {
+        public GameObject GetTargetObject()
+        {
             return _targetObject;
         }
 
-        public void ResetTarget() {
+        public void ResetTarget()
+        {
             _targetFood = null;
             _targetObject = null;
         }
 
-        public void SetTargetFood(Food food) {
+        public void SetTargetAnimal(Animal animal) {
+            _targetAnimal = animal;
+            _targetObject = animal.gameObject;
+        }
+
+        public void SetTargetFood(Food food)
+        {
             _targetFood = food;
             _targetObject = food.gameObject;
         }
 
-        public void SetTargetObject(GameObject obj) {
+        public void SetTargetObject(GameObject obj)
+        {
             _targetObject = obj;
         }
 
@@ -141,10 +179,20 @@ namespace BehaviorSim
                     _health = Mathf.Max(_health - _healthDecayAmount, 0.0f);
                 }
             }
+            else if (GetFoodPercentage() > 0.5f && GetWaterPercentage() > 0.6f)
+            {
+                _healthDecayTimer = 0;
+                _healthRegenTimer += Time.deltaTime;
+                if (_healthRegenTimer > _healthRegenRate)
+                {
+                    _healthRegenTimer = 0;
+                    _health = Mathf.Min(_health + _healthRegenAmount, Stats.MaxHealth);
+                }
+            }
             else
             {
                 _healthDecayTimer = 0;
-                
+                _healthRegenTimer = 0;
             }
         }
 
@@ -154,28 +202,50 @@ namespace BehaviorSim
             return Vector2.Distance(xzPosition, new Vector2(position.x, position.z)) <= epsilon;
         }
 
-        public bool IsNearPosition(Vector3 position, float epsilon) {
+        public bool IsNearPosition(Vector3 position, float epsilon)
+        {
             return Vector3.Distance(transform.position, position) <= epsilon;
         }
 
-        // TODO: add pathfinding algorithm so it avoids other creatures
+        public bool IsNearTargetObject2D(float epsilon)
+        {
+            return Vector3.Distance(transform.position, _targetObject.transform.position) <= epsilon;
+        }
+
+        public bool IsNearTargetObject(float epsilon)
+        {
+            return Vector3.Distance(transform.position, _targetObject.transform.position) <= epsilon;
+        }
+
+        // TODO: add pathfinding algorithm so it avoids environmental obstacles
         // Attempt to move this animal towards the given position.
         // If the animal cannot successfully move, return false.
+        // ALSO TODO: make radius bigger, perceive predators from a farther distance
         public bool MoveToPosition(Vector3 targetPosition)
         {
             Vector3 currentPosition = transform.position;
             Vector3 targetDirection = targetPosition - currentPosition;
+            float collisionRadius = Stats.CollisionRadius;
 
-            Collider[] colliders = Physics.OverlapSphere(currentPosition, Stats.CollisionRadius, Global.AnimalLayerMask);
+            Collider[] colliders = Physics.OverlapSphere(currentPosition, collisionRadius, Global.AnimalLayerMask);
             if (colliders.Length > 1)
             {
                 targetDirection = Vector3.zero;
                 for (int i = 0; i < colliders.Length; i++)
                 {
-                    if (colliders[i].gameObject == this.gameObject) {
+                    GameObject temporaryObject = colliders[i].gameObject;
+                    if (temporaryObject == gameObject || temporaryObject == _targetObject) {
                         continue;
                     }
-                    targetDirection -= colliders[i].transform.position - currentPosition;
+
+                    Animal neighborAnimal = colliders[i].gameObject.GetComponent<Animal>();
+                    if (!CanEatAnimal(neighborAnimal)) {
+                        continue;
+                    }
+
+                    Vector3 direction = colliders[i].transform.position - currentPosition;
+                    float distance = direction.magnitude;
+                    targetDirection -= (distance - collisionRadius) / collisionRadius * direction;
                 }
             }
 
@@ -189,7 +259,6 @@ namespace BehaviorSim
 
             transform.position = desiredPosition;
             return true;
-
         }
 
         public void RotateTowardsDirection(Vector3 targetDirection) {
@@ -213,14 +282,112 @@ namespace BehaviorSim
             transform.rotation = rotation * transform.rotation;
         }
 
-        /*protected void RunFromTargetObject() {
-        
-        }*/
 
+        // TODO: implement behavior that runs from target (e.g. predator)
+        public void RunFromTargetObject() {
+        
+        }
+
+        public bool CanEatAnimal(Animal animal)
+        {
+            int index = (int)animal.Type;
+            return FoodChainData.FoodSources[index];
+        }
 
         public bool CanEatFood(Food food) {
             int index = (int)food.Type;
             return FoodChainData.FoodSources[index];
+        }
+
+
+        public Food GetClosestFood(float radius)
+        {
+            float halfFOV = Stats.SightFOV / 2.0f;
+            float minDistance = radius;
+
+            Food targetFood = null;
+
+            Collider[] foodColliders = Physics.OverlapSphere(transform.position, radius, Global.FoodLayerMask);
+            foreach (Collider collider in foodColliders)
+            {
+                Vector3 foodPosition = collider.transform.position;
+                Vector3 foodDirection = foodPosition - transform.position;
+                float foodAngle = Mathf.Abs(Vector3.Angle(GetDirection(), foodDirection));
+                float foodDistance = Vector3.Distance(foodPosition, transform.position);
+                if (foodAngle <= halfFOV && foodDistance < minDistance)
+                {
+                    Food tempFood = collider.gameObject.GetComponent<Food>();
+                    if (CanEatFood(tempFood) && !tempFood.HasOwner())
+                    {
+                        minDistance = foodDistance;
+                        targetFood = tempFood;
+                    }
+                }
+            }
+
+            return targetFood;
+        }
+
+        public Animal GetClosestPrey(float radius)
+        {
+            float halfFOV = Stats.SightFOV / 2.0f;
+            float minDistance = radius;
+
+            Animal targetAnimal = null;
+
+            Collider[] animalColliders = Physics.OverlapSphere(transform.position, radius, Global.AnimalLayerMask);
+            foreach (Collider collider in animalColliders)
+            {
+                Vector3 animalPosition = collider.transform.position;
+                Vector3 animalDirection = animalPosition - transform.position;
+                float animalAngle = Mathf.Abs(Vector3.Angle(GetDirection(), animalDirection));
+                float animalDistance = Vector3.Distance(animalPosition, transform.position);
+                if (animalAngle <= halfFOV && animalDistance <= minDistance)
+                {
+                    Animal tempAnimal = collider.gameObject.GetComponent<Animal>();
+                    if (CanEatAnimal(tempAnimal))
+                    {
+                        minDistance = animalDistance;
+                        targetAnimal = tempAnimal;
+                    }
+                }
+            }
+
+            return targetAnimal;
+        }
+
+        public Animal GetClosestPredator(float radius)
+        {
+            float minDistance = radius;
+            Animal closestAnimal = null;
+
+            Collider[] colliders = Physics.OverlapSphere(transform.position, radius, Global.AnimalLayerMask);
+            if (colliders.Length > 1)
+            {
+                for (int i = 0; i < colliders.Length; i++)
+                {
+                    GameObject temporaryObject = colliders[i].gameObject;
+                    if (temporaryObject == this.gameObject || temporaryObject == _targetObject)
+                    {
+                        continue;
+                    }
+
+                    float distance = Vector3.Distance(colliders[i].transform.position, transform.position);
+                    if (distance < minDistance)
+                    {
+                        Animal animal = temporaryObject.GetComponent<Animal>();
+                        if (!IsEatenBy(animal))
+                        {
+                            continue;
+                        }
+
+                        minDistance = distance;
+                        closestAnimal = animal;
+                    }
+                }
+            }
+
+            return closestAnimal;
         }
 
         public bool EatTargetFood() {
@@ -238,12 +405,15 @@ namespace BehaviorSim
             return true;
         }
 
-        public bool IsEatenBy(Animal animal) {
+        public bool IsEatenBy(Animal animal)
+        {
             int index = (int)animal.Type;
             return FoodChainData.Predators[index];
         }
 
-        public void Deselect() {
+        public void Deselect()
+        {
+            _selected = false;
             _behaviorTree.Selected = false;
             _debugArrowObject.SetActive(false);
             if (_targetFood != null) {
@@ -252,7 +422,9 @@ namespace BehaviorSim
         }
 
         // TODO: add FOV debug view
-        public void Select() {
+        public void Select()
+        {
+            _selected = true;
             _behaviorTree.Selected = true;
             _debugArrowObject.SetActive(true);
             if (_targetFood != null) {
@@ -261,14 +433,22 @@ namespace BehaviorSim
         }
 
         // When an animal dies, it leaves a corpse for predators to eat.
-        public void Die() {
-            gameObject.SetActive(false);
-            global.SpawnCorpse(Type, transform.position);
+        public Food Die()
+        {
+            if (_targetFood != null)
+            {
+                _targetFood.ResetOwner();
+            }
+
             Destroy(gameObject);
+
+            GameObject corpseObject = global.SpawnCorpse(Type, transform.position);
+            return corpseObject.GetComponent<Food>();
         }
 
         // Simply destroys the game object
-        public void Delete() {
+        public void Delete()
+        {
             Destroy(gameObject);
         }
     }

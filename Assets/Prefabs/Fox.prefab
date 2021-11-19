@@ -450,6 +450,7 @@ GameObject:
   - component: {fileID: 2935994024201873077}
   - component: {fileID: 2357268762802864142}
   - component: {fileID: 8799214600505788863}
+  - component: {fileID: 4612140140849031921}
   m_Layer: 8
   m_Name: Fox
   m_TagString: Untagged
@@ -525,8 +526,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.50701416, y: 0.95, z: 1.38}
-  m_Center: {x: 0, y: -0.335, z: -0.27}
+  m_Size: {x: 0.7357535, y: 1.7707644, z: 2.5506797}
+  m_Center: {x: -0.08181512, y: 0.89864874, z: -0.10023682}
 --- !u!54 &8799214600505788863
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -543,6 +544,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
+--- !u!114 &4612140140849031921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2935994024201873079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07ea58f2ade6fb747ada8b1728af0f6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  global: {fileID: 0}
+  _selected: 0
 --- !u!1 &3141943157508539107
 GameObject:
   m_ObjectHideFlags: 0
@@ -1339,7 +1354,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5853324287632759210}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.15, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 695819272629632353}

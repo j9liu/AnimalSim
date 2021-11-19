@@ -13,10 +13,10 @@ namespace BehaviorSim {
         [SerializeField]
         private FoodType _type;
         public FoodType Type
-        { 
+        {
             get {
-                return _type; 
-           }
+                return _type;
+            }
         }
 
         [SerializeField]
@@ -48,12 +48,14 @@ namespace BehaviorSim {
 
         public void Start()
         {
-            _outline = gameObject.AddComponent<Outline>();
+            if (Type == FoodType.ACORN) {
+                _outline = gameObject.AddComponent<Outline>();
 
-            _outline.OutlineMode = Outline.Mode.OutlineAll;
-            _outline.OutlineColor = Color.yellow;
-            _outline.OutlineWidth = 2.0f;
-            _outline.enabled = false;
+                _outline.OutlineMode = Outline.Mode.OutlineAll;
+                _outline.OutlineColor = Color.yellow;
+                _outline.OutlineWidth = 2.0f;
+                _outline.enabled = false;
+            }
         }
 
         public float GetPortion()
@@ -69,12 +71,24 @@ namespace BehaviorSim {
             return _portionAmount;
         }
 
-        public bool HasOwner() {
+        public bool HasOwner()
+        {
             return _owner != null;
         }
 
-        public bool SetOwner(Animal animal) {
-            if (_owner != null) {
+        public void ResetOwner()
+        {
+            if (_owner.Selected && _outline != null)
+            {
+                _outline.enabled = false;
+            }
+            _owner = null;
+        }
+
+        public bool SetOwner(Animal animal)
+        {
+            if (_owner != null)
+            {
                 return false;
             }
 
@@ -82,8 +96,12 @@ namespace BehaviorSim {
             return true;
         }
 
-        public void SetHighlighted(bool value) {
-            _outline.enabled = value;
+        public void SetHighlighted(bool value)
+        {
+            if (_outline != null)
+            {
+                _outline.enabled = value;
+            }
         }
 
     }

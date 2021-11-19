@@ -3,11 +3,11 @@ using BehaviorSim.BehaviorTree;
 
 namespace BehaviorSim
 {
-    public class Squirrel : Animal
+    public class Fox : Animal
     {
-        public override AnimalType Type => AnimalType.SQUIRREL;
-        public override AnimalStats Stats => AnimalStatsTypes.SquirrelStats;
-        public override AnimalFoodChainData FoodChainData => AnimalFoodChainDataTypes.SquirrelFoodChainData;
+        public override AnimalType Type => AnimalType.FOX;
+        public override AnimalStats Stats => AnimalStatsTypes.FoxStats;
+        public override AnimalFoodChainData FoodChainData => AnimalFoodChainDataTypes.FoxFoodChainData;
 
         protected void Start()
         {
@@ -17,7 +17,7 @@ namespace BehaviorSim
             _water = Random.Range(0.5f * Stats.MaxFood, 0.8f * Stats.MaxFood);
             _health = Stats.MaxHealth;
 
-            _behaviorTree = new SquirrelTree();
+            _behaviorTree = new FoxTree();
             _behaviorTree.SetOwner(gameObject);
 
             _debugArrowObject = transform.GetChild(1).gameObject;

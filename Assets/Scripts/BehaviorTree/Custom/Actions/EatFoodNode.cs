@@ -11,10 +11,6 @@ namespace BehaviorSim.BehaviorTree {
 
         }
 
-        protected override void Enter()
-        {
-        }
-
         protected override NodeStatus Execute()
         {
             if (_ownerAnimal.EatTargetFood()) {

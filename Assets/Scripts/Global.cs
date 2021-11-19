@@ -14,9 +14,13 @@ namespace BehaviorSim
         private GameObject _squirrel;
 
         [SerializeField]
+        private GameObject _fox;
+
+        [SerializeField]
         private GameObject _squirrelCorpse;
 
         public int InitialSquirrelPopulation = 1;
+        public int InitialFoxPopulation = 1;
 
         private Ground _ground;
         private UIManager _uiManager;
@@ -32,6 +36,7 @@ namespace BehaviorSim
 
         public const int UILayer = 5;
         public const int AnimalLayerMask = 1 << 8;
+        public const int FoodLayerMask = 1 << 9;
 
         // Start is called before the first frame update
         public void Start()
@@ -111,13 +116,13 @@ namespace BehaviorSim
             }
         }
 
-        public void SpawnCorpse(AnimalType type, Vector3 spawnPosition) {
+        public GameObject SpawnCorpse(AnimalType type, Vector3 spawnPosition) {
             switch (type) {
                 case AnimalType.SQUIRREL:
-                    Instantiate(_squirrelCorpse, spawnPosition, Quaternion.identity, _foodObject.transform);
-                    break;
+                    return Instantiate(_squirrelCorpse, spawnPosition, Quaternion.identity, _foodObject.transform);
                 case AnimalType.FOX:
-                    break;
+                default:
+                    return null;
             }
         }
 
@@ -132,12 +137,23 @@ namespace BehaviorSim
                 // TODO: reset animals
             }
 
-            for (int i = _animals.Count; i < InitialSquirrelPopulation; i++) {
+            for (int i = 0; i < InitialSquirrelPopulation; i++) {
                 Vector3 spawnPosition = _ground.GetRandomPositionForObject(_squirrel);
                 float spawnAngle = Random.Range(-180, 180);
                 Quaternion spawnRotation = Quaternion.AngleAxis(spawnAngle, _squirrel.transform.up);
                 GameObject currentAnimal = Instantiate(_squirrel, spawnPosition, spawnRotation, _animalsObject.transform);
                 Squirrel currentComponent = currentAnimal.GetComponent<Squirrel>();
+                currentComponent.global = this;
+                _animals.Add(currentComponent);
+            }
+
+            for (int i = 0; i < InitialFoxPopulation; i++)
+            {
+                Vector3 spawnPosition = _ground.GetRandomPositionForObject(_fox);
+                float spawnAngle = Random.Range(-180, 180);
+                Quaternion spawnRotation = Quaternion.AngleAxis(spawnAngle, _fox.transform.up);
+                GameObject currentAnimal = Instantiate(_fox, spawnPosition, spawnRotation, _animalsObject.transform);
+                Fox currentComponent = currentAnimal.GetComponent<Fox>();
                 currentComponent.global = this;
                 _animals.Add(currentComponent);
             }
