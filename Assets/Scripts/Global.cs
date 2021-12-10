@@ -5,34 +5,39 @@ using UnityEngine.EventSystems;
 
 namespace BehaviorSim
 {
+    public class GlobalParameters {
+        public int InitialSquirrelPopulation = 6;
+        public int InitialFoxPopulation = 1;
+        public int InitialAcornAmount = 7;
+        public float AcornSpawnRate = 5.0f; // The rate at which acorns spawn, in seconds
+    }
+
     public class Global : MonoBehaviour
     {
         [SerializeField]
         private GameObject _acorn;
-
         [SerializeField]
         private GameObject _squirrel;
-
         [SerializeField]
         private GameObject _fox;
-
         [SerializeField]
         private GameObject _squirrelCorpse;
-
-        public int InitialSquirrelPopulation = 1;
-        public int InitialFoxPopulation = 1;
+        [SerializeField]
+        private GameObject _foxCorpse;
 
         private Ground _ground;
         private UIManager _uiManager;
         private GameObject _animalsObject;
         private GameObject _foodObject;
 
+        private GlobalParameters _parameters;
+
         private EventSystem _eventSystem;
 
+        private List<GameObject> _food;
         private List<Animal> _animals;
 
         private float _acornSpawnTimer;
-        public float acornSpawnRate; // The rate at which acorns spawns, in seconds
 
         public const int UILayer = 5;
         public const int AnimalLayerMask = 1 << 8;
@@ -55,23 +60,24 @@ namespace BehaviorSim
 
             // Set up timers
             _acornSpawnTimer = 0.0f;
-            acornSpawnRate = 5.0f;
+            _parameters = new GlobalParameters();
+
+            _animals = new List<Animal>();
+            _food = new List<GameObject>();
 
             // Populate the world with animals
             SpawnAnimals();
+            SpawnFood();
 
-            // Hardcoded spawn of some acorns at the beginning of the simulation
-            for (int i = 0; i < 5; i++) {
-                Vector3 spawnPosition = _ground.GetRandomPositionForObject(_acorn);
-                Instantiate(_acorn, spawnPosition, Quaternion.identity, _foodObject.transform);
-            }
+            _uiManager.SetInitialAnimalPopulation(AnimalType.SQUIRREL, _parameters.InitialSquirrelPopulation);
+            _uiManager.SetInitialAnimalPopulation(AnimalType.FOX, _parameters.InitialFoxPopulation);
         }
 
         // Update is called once per frame
         public void Update()
         {
             HandleMouseInput();
-            SpawnFood();
+            RegenerateFood();
         }
 
         public Ground GetGround()
@@ -105,39 +111,47 @@ namespace BehaviorSim
             }
         }
 
-        private void SpawnFood()
+        private void RegenerateFood()
         {
             _acornSpawnTimer += Time.deltaTime;
-            if (_acornSpawnTimer >= acornSpawnRate)
+            if (_acornSpawnTimer >= _parameters.AcornSpawnRate)
             {
                 Vector3 spawnPosition = _ground.GetRandomPositionForObject(_acorn);
                 GameObject currentAcorn = Instantiate(_acorn, spawnPosition, Quaternion.identity, _foodObject.transform);
+                _food.Add(currentAcorn);
                 _acornSpawnTimer = 0.0f;
             }
         }
 
-        public GameObject SpawnCorpse(AnimalType type, Vector3 spawnPosition) {
-            switch (type) {
-                case AnimalType.SQUIRREL:
-                    return Instantiate(_squirrelCorpse, spawnPosition, Quaternion.identity, _foodObject.transform);
-                case AnimalType.FOX:
-                default:
-                    return null;
+        private void SpawnFood()
+        {
+            for (int i = 0; i < _parameters.InitialAcornAmount; i++)
+            {
+                Vector3 spawnPosition = _ground.GetRandomPositionForObject(_acorn);
+                GameObject food = Instantiate(_acorn, spawnPosition, Quaternion.identity, _foodObject.transform);
+                _food.Add(food);
             }
         }
 
-        // TODO: add UI so that the player can specify the initial populations
-        // of animals and reuse this function
+        public GameObject SpawnCorpse(AnimalType type, Vector3 spawnPosition) {
+            GameObject corpse = null;
+            switch (type) {
+                case AnimalType.SQUIRREL:
+                    corpse = Instantiate(_squirrelCorpse, spawnPosition, Quaternion.identity, _foodObject.transform);
+                    break;
+                case AnimalType.FOX:
+                    corpse = Instantiate(_foxCorpse, spawnPosition, Quaternion.identity, _foodObject.transform);
+                    break;
+                default:
+                    return null;
+            }
+            _food.Add(corpse);
+            return corpse;
+        }
+
         public void SpawnAnimals() {
-            if (_animals == null) {
-                _animals = new List<Animal>();
-            }
 
-            if (_animals.Count > 0) {
-                // TODO: reset animals
-            }
-
-            for (int i = 0; i < InitialSquirrelPopulation; i++) {
+            for (int i = 0; i < _parameters.InitialSquirrelPopulation; i++) {
                 Vector3 spawnPosition = _ground.GetRandomPositionForObject(_squirrel);
                 float spawnAngle = Random.Range(-180, 180);
                 Quaternion spawnRotation = Quaternion.AngleAxis(spawnAngle, _squirrel.transform.up);
@@ -147,7 +161,7 @@ namespace BehaviorSim
                 _animals.Add(currentComponent);
             }
 
-            for (int i = 0; i < InitialFoxPopulation; i++)
+            for (int i = 0; i < _parameters.InitialFoxPopulation; i++)
             {
                 Vector3 spawnPosition = _ground.GetRandomPositionForObject(_fox);
                 float spawnAngle = Random.Range(-180, 180);
@@ -159,5 +173,40 @@ namespace BehaviorSim
             }
         }
 
+        public void ResetSimulation() {
+
+            _uiManager.Deselect();
+
+            for (int i = _food.Count - 1; i >= 0; i--)
+            {
+                Destroy(_food[i]);
+            }
+
+            _food.Clear();
+
+            for (int i = _animals.Count - 1; i >= 0; i--)
+            {
+                if (_animals[i] != null)
+                {
+                    _animals[i].Delete();
+                }
+            }
+            
+            _animals.Clear();
+
+            int squirrelPopulation = _uiManager.GetInitialAnimalPopulation(AnimalType.SQUIRREL);
+            if (squirrelPopulation >= 0) {
+                _parameters.InitialSquirrelPopulation = squirrelPopulation;
+            }
+
+            int foxPopulation = _uiManager.GetInitialAnimalPopulation(AnimalType.FOX);
+            if (foxPopulation >= 0)
+            {
+                _parameters.InitialFoxPopulation = foxPopulation;
+            }
+
+            SpawnAnimals();
+            SpawnFood();
+        }
     }
 }

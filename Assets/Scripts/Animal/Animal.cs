@@ -4,7 +4,8 @@ namespace BehaviorSim
 {
     // This enum is used to quickly identify animals,
     // as well as index them in the food chain data arrays.
-    public enum AnimalType: int{
+    public enum AnimalType: int
+    {
         SQUIRREL = 0,
         FOX = 1
     }
@@ -15,10 +16,11 @@ namespace BehaviorSim
         public float MaxWater;
         public float MaxHealth;
 
-        public float Speed;
+        public float MaxSpeed;
         public float AngularSpeed;
         public float SightFOV;
         public float SightRadius;
+        public float HearingRadius;
         public float CollisionRadius;
     }
 
@@ -26,6 +28,14 @@ namespace BehaviorSim
     {
         public bool[] FoodSources;
         public bool[] Predators;
+    }
+
+    public enum AnimalFilter: int {
+        SAME_SPECIES = 0,
+        PREY_ONLY = 1,
+        PREDATOR_ONLY = 2,
+        DIFFERENT_SPECIES = 3,
+        ALL = 4
     }
 
     public abstract class Animal : MonoBehaviour
@@ -37,27 +47,31 @@ namespace BehaviorSim
         protected BehaviorTree.Tree _behaviorTree;
 
         protected GameObject _targetObject;
-        protected Food       _targetFood;
-        protected Animal     _targetAnimal;
+        protected Food _targetFood;
+        protected Animal _targetAnimal;
+        protected bool _targetIsPredator = false;
 
         public Global global;
 
         protected float _food;
-        public float Food {
+        public float Food
+        {
             get {
                 return _food;
             }
         }
 
         protected float _water;
-        public float Water {
+        public float Water
+        {
             get {
                 return _water;
             }
         }
 
         protected float _health;
-        public float Health {
+        public float Health
+        {
             get {
                 return _health;
             }
@@ -73,11 +87,41 @@ namespace BehaviorSim
 
         private float _foodDecayTimer;
         private const float _foodDecayRate = 10.0f;
-        private const float _foodDecayAmount = 5.0f;
+        private const float _foodDecayAmount = 10.0f;
 
         private float _eatTimer;
+        protected enum AnimalBehaviorStatus : int
+        {
+            EATING = 0,
+            DRINKING = 1,
+            IDLE = 2,
+            MOVING = 3
+        }
+
+        protected AnimalBehaviorStatus _behaviorStatus = AnimalBehaviorStatus.IDLE;
+
+        protected float _currentSpeed = 0.0f;
+        public float CurrentSpeed
+        {
+            get
+            {
+                return _currentSpeed;
+            }
+
+            set
+            {
+                _currentSpeed = Mathf.Min(Mathf.Max(value, 0.0f), Stats.MaxSpeed);
+            }
+        }
 
         protected Vector3 _direction;
+        public Vector3 Direction
+        {
+            get {
+                return _direction;
+            }
+        }
+
         protected GameObject _debugArrowObject;
 
         public bool _selected = false;
@@ -94,8 +138,6 @@ namespace BehaviorSim
 
         protected void Update()
         {
-            UpdateStats();
-
             if (_health == 0)
             {
                 Die();
@@ -103,11 +145,8 @@ namespace BehaviorSim
             else {
                 _behaviorTree.Tick();
             }
-        }
 
-        public Vector3 GetDirection()
-        {
-            return _direction;
+            UpdateStats();
         }
 
         public float GetFoodPercentage()
@@ -141,6 +180,7 @@ namespace BehaviorSim
 
         public void ResetTarget()
         {
+            _targetFood.ResetOwner();
             _targetFood = null;
             _targetObject = null;
         }
@@ -163,11 +203,24 @@ namespace BehaviorSim
 
         private void UpdateStats()
         {
-            _foodDecayTimer += Time.deltaTime;
-            if (_foodDecayTimer > _foodDecayRate)
+            // Map the animal's current speed to a modifier between 0.5 and 2.0
+            float scalar = (1.5f * _currentSpeed / Stats.MaxSpeed) + 0.5f;
+
+            if (_behaviorStatus != AnimalBehaviorStatus.EATING)
             {
+                _foodDecayTimer += scalar * Time.deltaTime;
+                if (_foodDecayTimer > _foodDecayRate)
+                {
+                    _foodDecayTimer = 0;
+                    _food = Mathf.Max(_food - _foodDecayAmount, 0.0f);
+                }
+            }
+            else {
                 _foodDecayTimer = 0;
-                _food = Mathf.Max(_food - _foodDecayAmount, 0.0f);
+            }
+
+            if (_behaviorStatus != AnimalBehaviorStatus.DRINKING) {
+                // TODO: implement water decay
             }
 
             if (_food == 0 || _water == 0)
@@ -181,7 +234,6 @@ namespace BehaviorSim
             }
             else if (GetFoodPercentage() > 0.5f && GetWaterPercentage() > 0.6f)
             {
-                _healthDecayTimer = 0;
                 _healthRegenTimer += Time.deltaTime;
                 if (_healthRegenTimer > _healthRegenRate)
                 {
@@ -209,20 +261,21 @@ namespace BehaviorSim
 
         public bool IsNearTargetObject2D(float epsilon)
         {
-            return Vector3.Distance(transform.position, _targetObject.transform.position) <= epsilon;
+            return IsNearPosition2D(_targetObject.transform.position, epsilon);
         }
 
         public bool IsNearTargetObject(float epsilon)
         {
-            return Vector3.Distance(transform.position, _targetObject.transform.position) <= epsilon;
+            return IsNearPosition(_targetObject.transform.position, epsilon);
         }
 
         // TODO: add pathfinding algorithm so it avoids environmental obstacles
         // Attempt to move this animal towards the given position.
         // If the animal cannot successfully move, return false.
         // ALSO TODO: make radius bigger, perceive predators from a farther distance
-        public bool MoveToPosition(Vector3 targetPosition)
+        public bool MoveToPosition(Vector3 targetPosition, float speed)
         {
+            _behaviorStatus = AnimalBehaviorStatus.MOVING;
             Vector3 currentPosition = transform.position;
             Vector3 targetDirection = targetPosition - currentPosition;
             float collisionRadius = Stats.CollisionRadius;
@@ -251,7 +304,16 @@ namespace BehaviorSim
 
             RotateTowardsDirection(targetDirection);
 
-            Vector3 desiredPosition = currentPosition + (Stats.Speed * Time.deltaTime * _direction);   
+            if (speed < _currentSpeed)
+            {
+
+                CurrentSpeed = Mathf.SmoothStep(speed, _currentSpeed, speed * Time.deltaTime);
+            }
+            else {
+                CurrentSpeed = Mathf.SmoothStep(_currentSpeed, speed, speed * Time.deltaTime);
+            }
+
+            Vector3 desiredPosition = currentPosition + (_currentSpeed * Time.deltaTime * _direction);   
             if (!global.GetGround().IsValidPosition(desiredPosition))
             {
                 return false;
@@ -264,14 +326,16 @@ namespace BehaviorSim
         public void RotateTowardsDirection(Vector3 targetDirection) {
             float angle = Vector3.SignedAngle(_direction, Vector3.Normalize(targetDirection), transform.up);
             if (Mathf.Abs(angle) > 0.5f) {
-                Quaternion rotation = Quaternion.AngleAxis(angle * Stats.AngularSpeed * Time.deltaTime, transform.up);
+                Quaternion rotation = Quaternion.AngleAxis(angle * (Stats.AngularSpeed + _currentSpeed) * Time.deltaTime, transform.up);
                 _direction = rotation * _direction;
                 transform.rotation = rotation * transform.rotation;
             }
         }
 
-        public void FaceTargetObject() {
-            if (_targetObject == null) {
+        public void FaceTargetObject()
+        {
+            if (_targetObject == null)
+            {
                 return;
             }
 
@@ -283,9 +347,25 @@ namespace BehaviorSim
         }
 
 
-        // TODO: implement behavior that runs from target (e.g. predator)
-        public void RunFromTargetObject() {
-        
+        // TODO: implement smarter running away behavior
+        public void RunFromTargetAnimal()
+        {
+            _behaviorStatus = AnimalBehaviorStatus.MOVING;
+
+            Vector3 targetDirection = transform.position - _targetAnimal.transform.position;
+
+            Vector3 currentPosition = transform.position;
+
+            RotateTowardsDirection(targetDirection);
+
+            CurrentSpeed = Mathf.SmoothStep(_currentSpeed, Stats.MaxSpeed, Stats.MaxSpeed * Time.deltaTime);
+
+            Vector3 desiredPosition = currentPosition + (_currentSpeed * Time.deltaTime * _direction);
+
+            if (global.GetGround().IsValidPosition(desiredPosition))
+            {
+                transform.position = desiredPosition;
+            }
         }
 
         public bool CanEatAnimal(Animal animal)
@@ -294,7 +374,8 @@ namespace BehaviorSim
             return FoodChainData.FoodSources[index];
         }
 
-        public bool CanEatFood(Food food) {
+        public bool CanEatFood(Food food)
+        {
             int index = (int)food.Type;
             return FoodChainData.FoodSources[index];
         }
@@ -312,7 +393,7 @@ namespace BehaviorSim
             {
                 Vector3 foodPosition = collider.transform.position;
                 Vector3 foodDirection = foodPosition - transform.position;
-                float foodAngle = Mathf.Abs(Vector3.Angle(GetDirection(), foodDirection));
+                float foodAngle = Mathf.Abs(Vector3.Angle(_direction, foodDirection));
                 float foodDistance = Vector3.Distance(foodPosition, transform.position);
                 if (foodAngle <= halfFOV && foodDistance < minDistance)
                 {
@@ -328,6 +409,11 @@ namespace BehaviorSim
             return targetFood;
         }
 
+        /*public Animal GetClosestAnimal(float radius, bool useSight, bool useHearing, AnimalFilter filter)
+        {
+            Animal targetAnimal = null;
+        }*/
+
         public Animal GetClosestPrey(float radius)
         {
             float halfFOV = Stats.SightFOV / 2.0f;
@@ -340,7 +426,7 @@ namespace BehaviorSim
             {
                 Vector3 animalPosition = collider.transform.position;
                 Vector3 animalDirection = animalPosition - transform.position;
-                float animalAngle = Mathf.Abs(Vector3.Angle(GetDirection(), animalDirection));
+                float animalAngle = Mathf.Abs(Vector3.Angle(_direction, animalDirection));
                 float animalDistance = Vector3.Distance(animalPosition, transform.position);
                 if (animalAngle <= halfFOV && animalDistance <= minDistance)
                 {
@@ -390,7 +476,10 @@ namespace BehaviorSim
             return closestAnimal;
         }
 
-        public bool EatTargetFood() {
+        public bool EatTargetFood()
+        {
+            _behaviorStatus = AnimalBehaviorStatus.EATING;
+            CurrentSpeed = 0;
             if (_targetFood == null) {
                 return false;
             }

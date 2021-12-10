@@ -4,11 +4,10 @@ using UnityEngine;
 
 namespace BehaviorSim.BehaviorTree
 {
-    public class ActionNode : Node
+    public abstract class ActionNode : Node
     {
-        public ActionNode(string name) : base(name, true)
+        public ActionNode(string name) : base(name, NodeType.LEAF)
         {
-            _children = null;
         }
 
         private bool _running = false;
@@ -17,9 +16,7 @@ namespace BehaviorSim.BehaviorTree
         
         protected virtual void Exit() { }
 
-        protected virtual NodeStatus Execute() {
-            return NodeStatus.SUCCESS;
-        }
+        protected abstract NodeStatus Execute();
 
         public override NodeStatus Tick() {
             NodeStatus result = NodeStatus.SUCCESS;

@@ -4,13 +4,12 @@ using UnityEngine;
 
 
 namespace BehaviorSim.BehaviorTree {
-    public class SequenceNode : Node
+    public class SequenceNode : ControlNode
     {
         private Node _activeChild;
         private int  _activeChildIndex;
 
-        public SequenceNode(string name) : base(name, false) {
-            _children = new List<Node>();
+        public SequenceNode(string name) : base(name) {
             _activeChild = null;
             _activeChildIndex = -1;
         }
@@ -35,11 +34,11 @@ namespace BehaviorSim.BehaviorTree {
                             _activeChildIndex++;
                             break;
                         case NodeStatus.FAILURE:
+                        case NodeStatus.HALT:
                             _activeChild = null;
                             _activeChildIndex = -1;
                             SetStatus(result);
                             return result;
-
                     }
                 }
             }

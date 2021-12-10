@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,6 +18,7 @@ namespace BehaviorSim {
 
         private GameObject _statsPanel;
         private GameObject _behaviorTreePanel;
+        private GameObject _controlPanel;
 
         private bool _behaviorTreePanelActive;
 
@@ -25,7 +26,14 @@ namespace BehaviorSim {
         private StatusBar _foodBar;
         private StatusBar _waterBar;
 
+        private Text _statsSpeciesNameText;
+        private Text _behaviorTreeSpeciesNameText;
+
         private Text _behaviorTreeButtonText;
+
+        private InputField _controlSquirrelPopulationInputField;
+        private InputField _controlFoxPopulationInputField;
+        private InputField _controlAcornRespawnInputField;
 
         // Start is called before the first frame update
         void Start()
@@ -34,6 +42,10 @@ namespace BehaviorSim {
 
             _statsPanel = transform.GetChild(0).gameObject;
             _behaviorTreePanel = transform.GetChild(1).gameObject;
+            _controlPanel = transform.GetChild(2).gameObject;
+
+            _statsSpeciesNameText = _statsPanel.transform.GetChild(0).GetComponent<Text>();
+            _behaviorTreeSpeciesNameText = _behaviorTreePanel.transform.GetChild(0).GetComponent<Text>();
 
             Transform statusBarsTransform = _statsPanel.transform.GetChild(1);
             _healthBar = statusBarsTransform.GetChild(0).gameObject.GetComponent<StatusBar>();
@@ -54,6 +66,12 @@ namespace BehaviorSim {
 
             Transform buttonTransform = _statsPanel.transform.GetChild(2);
             _behaviorTreeButtonText = buttonTransform.GetChild(0).gameObject.GetComponent<Text>();
+
+            Transform squirrelPopulationTransform = _controlPanel.transform.GetChild(1);
+            _controlSquirrelPopulationInputField = squirrelPopulationTransform.GetChild(1).GetComponent<InputField>();
+
+            Transform foxPopulationTransform = _controlPanel.transform.GetChild(2);
+            _controlFoxPopulationInputField = foxPopulationTransform.GetChild(1).GetComponent<InputField>();
 
             _statsPanel.SetActive(false);
             _behaviorTreePanel.SetActive(false);
@@ -86,9 +104,13 @@ namespace BehaviorSim {
 
             switch (_selectedAnimal.Type) {
                 case AnimalType.SQUIRREL:
+                    _statsSpeciesNameText.text = "Squirrel";
+                    _behaviorTreeSpeciesNameText.text = "Squirrel";
                     _uiTrees[0].SetActive(true);
                     break;
                 case AnimalType.FOX:
+                    _statsSpeciesNameText.text = "Fox";
+                    _behaviorTreeSpeciesNameText.text = "Fox";
                     _uiTrees[1].SetActive(true);
                     break;
             }
@@ -107,25 +129,37 @@ namespace BehaviorSim {
             }
             else
             {
-                _behaviorTreePanel.SetActive(true);
-                _behaviorTreeButtonText.text = "Hide Behavior Tree";
-                int index = (int)_selectedAnimal.Type;
-                _uiTrees[index].SetActive(true);
-
+                ShowBehaviorTreePanel();
             }
-
-            _behaviorTreePanelActive = !_behaviorTreePanelActive;
         }
 
-        public void HideBehaviorTreePanel()
+        protected void ShowBehaviorTreePanel()
         {
-            if (_selectedAnimal != null) {
+            if (_selectedAnimal != null)
+            {
+                int index = (int)_selectedAnimal.Type;
+                _uiTrees[index].SetActive(true);
+            }
+
+            _behaviorTreePanelActive = true;
+            _behaviorTreePanel.SetActive(true);
+            _behaviorTreeButtonText.text = "Hide Behavior Tree";
+            
+            _controlPanel.SetActive(false);
+        }
+
+        protected void HideBehaviorTreePanel()
+        {
+            if (_selectedAnimal != null)
+            {
                 int index = (int)_selectedAnimal.Type;
                 _uiTrees[index].SetActive(false);
             }
+
             _behaviorTreePanelActive = false;
             _behaviorTreePanel.SetActive(false);
             _behaviorTreeButtonText.text = "Show Behavior Tree";
+            _controlPanel.SetActive(true);
         }
 
         public void Deselect()
@@ -154,6 +188,45 @@ namespace BehaviorSim {
         {
             int index = (int)animal;
             return _uiTrees[index];
+        }
+
+        public int GetInitialAnimalPopulation(AnimalType type)
+        {
+            string input = "";
+            switch (type) {
+                case AnimalType.SQUIRREL:
+                    input = _controlSquirrelPopulationInputField.text;
+                    break;
+                case AnimalType.FOX:
+                    input = _controlFoxPopulationInputField.text;
+                    break;
+                default:
+                    return -1;
+            }
+
+            try
+            {
+                int result = Int16.Parse(input);
+                return result;
+            }
+            catch {
+                return -1;
+            }
+        }
+
+        public void SetInitialAnimalPopulation(AnimalType type, int number)
+        {
+            switch (type)
+            {
+                case AnimalType.SQUIRREL:
+                    _controlSquirrelPopulationInputField.text = number.ToString();
+                    break;
+                case AnimalType.FOX:
+                    _controlFoxPopulationInputField.text = number.ToString();
+                    break;
+                default:
+                    break;
+            }
         }
     }
 

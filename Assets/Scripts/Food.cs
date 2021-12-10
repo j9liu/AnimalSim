@@ -48,14 +48,11 @@ namespace BehaviorSim {
 
         public void Start()
         {
-            if (Type == FoodType.ACORN) {
-                _outline = gameObject.AddComponent<Outline>();
-
-                _outline.OutlineMode = Outline.Mode.OutlineAll;
-                _outline.OutlineColor = Color.yellow;
-                _outline.OutlineWidth = 2.0f;
-                _outline.enabled = false;
-            }
+            _outline = gameObject.AddComponent<Outline>();
+            _outline.OutlineMode = Outline.Mode.OutlineAll;
+            _outline.OutlineColor = Color.yellow;
+            _outline.OutlineWidth = 4.0f;
+            _outline.enabled = false;
         }
 
         public float GetPortion()

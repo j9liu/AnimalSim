@@ -6,7 +6,7 @@ namespace BehaviorSim.BehaviorTree
 {
     public class AttackAnimalNode : AnimalActionNode
     {
-        private const float _attackEpsilon = 8.0f;
+        private const float _attackEpsilon = 8.2f;
 
         public AttackAnimalNode() : base("Attack Animal")
         {
@@ -15,10 +15,10 @@ namespace BehaviorSim.BehaviorTree
 
         protected override NodeStatus Execute()
         {
-            /*if (!_ownerAnimal.IsNearTargetObject2D(_attackEpsilon))
+            if (!_ownerAnimal.IsNearTargetObject2D(_attackEpsilon))
             {
                 return NodeStatus.FAILURE;
-            }*/
+            }
 
             Animal targetAnimal = _ownerAnimal.GetTargetAnimal();
             Food targetCorpse = targetAnimal.Die();

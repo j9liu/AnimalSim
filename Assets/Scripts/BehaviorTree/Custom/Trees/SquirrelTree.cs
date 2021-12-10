@@ -6,17 +6,25 @@ namespace BehaviorSim.BehaviorTree {
     {
         public SquirrelTree() : base()
         {
+            SelectorNode subroot = new SelectorNode("Subroot");
+            DecoratorNode subrootDecorator = new RepeatUntilPredatorNearbyNode(subroot);
+
             SequenceNode hungerRoot = new SequenceNode("Hunger Subtree");
             hungerRoot.AddChild(new FoodLowNode(0.6f));
-            hungerRoot.AddChild(new FindNearbyFoodNode());
-            hungerRoot.AddChild(new GoToTargetFoodNode());
+            hungerRoot.AddChild(new IsFoodNearbyNode());
+            hungerRoot.AddChild(new GoToTargetFoodNode(3.0f));
             hungerRoot.AddChild(new EatFoodNode());
 
-            _root = new SelectorNode("Root");
-            _root.AddChild(hungerRoot);
-            _root.AddChild(new WanderNode());
+            ControlNode root = new SelectorNode("Root");
+            subroot.AddChild(hungerRoot);
 
-            GameObject canvas = GameObject.Find("Canvas");
+            ActionNode wander = new WanderNode();
+            subroot.AddChild(wander);
+
+            root.AddChild(subroot);
+            _root = root;
+
+            GameObject canvas = GameObject.Find("Canvas"); 
             UIManager uiManager = canvas.GetComponent<UIManager>();
 
             GameObject uiTree = uiManager.GetUITree(AnimalType.SQUIRREL);

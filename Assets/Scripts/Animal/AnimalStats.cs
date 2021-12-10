@@ -12,10 +12,11 @@ namespace BehaviorSim
             MaxWater = 100,
             MaxHealth = 100,
 
-            Speed = 3.2f,
+            MaxSpeed = 5.0f,
             AngularSpeed = 75.0f * Mathf.Deg2Rad,
-            SightFOV = 240.0f,
+            SightFOV = 270.0f,
             SightRadius = 50.0f,
+            HearingRadius = 70.0f,
             CollisionRadius = 6.0f,
         };
 
@@ -25,10 +26,11 @@ namespace BehaviorSim
             MaxWater = 120,
             MaxHealth = 100,
 
-            Speed = 4.5f,
+            MaxSpeed = 7.5f,
             AngularSpeed = 90.0f * Mathf.Deg2Rad,
             SightFOV = 270.0f,
             SightRadius = 65.0f,
+            HearingRadius = 80.0f,
             CollisionRadius = 8.0f,
         };
     }

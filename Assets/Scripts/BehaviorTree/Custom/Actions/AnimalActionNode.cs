@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace BehaviorSim.BehaviorTree {
-    public class AnimalActionNode : ActionNode{
+    public abstract class AnimalActionNode : ActionNode{
 
         protected Animal     _ownerAnimal;
         protected Vector3    _referencePoint;
@@ -13,7 +13,6 @@ namespace BehaviorSim.BehaviorTree {
         {
 
         }
-
 
         public override void SetOwner(GameObject owner, Tree tree)
         {

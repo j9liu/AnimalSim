@@ -5,14 +5,13 @@ using UnityEngine;
 
 namespace BehaviorSim.BehaviorTree {
 
-    public class SelectorNode : Node
+    public class SelectorNode : ControlNode
     {
         private Node _activeChild;
         private int _activeChildIndex;
 
-        public SelectorNode(string name) : base(name, false)
+        public SelectorNode(string name) : base(name)
         {
-            _children = new List<Node>();
             _activeChild = null;
             _activeChildIndex = -1;
         }
@@ -37,6 +36,7 @@ namespace BehaviorSim.BehaviorTree {
                             SetStatus(result);
                             return result;
                         case NodeStatus.SUCCESS:
+                        case NodeStatus.HALT:
                             _activeChild = null;
                             _activeChildIndex = -1;
                             SetStatus(result);

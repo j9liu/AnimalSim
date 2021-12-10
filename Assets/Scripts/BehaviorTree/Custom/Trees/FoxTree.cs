@@ -6,16 +6,24 @@ namespace BehaviorSim.BehaviorTree
     {
         public FoxTree() : base()
         {
+
+            
+            SequenceNode chaseAnimalRoot = new SequenceNode("Chase Animal Subtree");
+            chaseAnimalRoot.AddChild(new SneakToAnimalNode());
+            chaseAnimalRoot.AddChild(new ChaseAnimalNode());
+            chaseAnimalRoot.AddChild(new AttackAnimalNode());
+            
+
             SequenceNode hungerRoot = new SequenceNode("Hunger Subtree");
             hungerRoot.AddChild(new FoodLowNode(0.6f));
             hungerRoot.AddChild(new FindNearbyPreyNode());
-            hungerRoot.AddChild(new GoToTargetAnimalNode());
-            hungerRoot.AddChild(new AttackAnimalNode());
+            hungerRoot.AddChild(chaseAnimalRoot);
             hungerRoot.AddChild(new EatFoodNode());
 
             _root = new SelectorNode("Root");
-            _root.AddChild(hungerRoot);
-            _root.AddChild(new WanderNode());
+            ControlNode root = (ControlNode)_root;
+            root.AddChild(hungerRoot);
+            root.AddChild(new WanderNode());
 
             GameObject canvas = GameObject.Find("Canvas");
             UIManager uiManager = canvas.GetComponent<UIManager>();

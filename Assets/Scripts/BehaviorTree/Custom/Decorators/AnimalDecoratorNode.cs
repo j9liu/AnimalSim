@@ -2,11 +2,11 @@
 
 namespace BehaviorSim.BehaviorTree
 {
-    public abstract class AnimalConditionNode : ConditionNode
+    public abstract class AnimalDecoratorNode : DecoratorNode
     {
         protected Animal _ownerAnimal;
 
-        public AnimalConditionNode(string name) : base(name)
+        public AnimalDecoratorNode(string name, Node child) : base(name, child)
         {
         }
 

@@ -6,20 +6,24 @@ namespace BehaviorSim.BehaviorTree {
     public class GoToTargetFoodNode : AnimalActionNode
     {
 
-        private const float _targetEpsilon = 3.0f;
+        private float _targetEpsilon;
+        private float _goToSpeed;
 
-        public GoToTargetFoodNode() : base("Go To Target Food")
+        public GoToTargetFoodNode(float targetEpsilon) : base("Go To Target Food")
         {
+            _targetEpsilon = targetEpsilon;
         }
 
         protected override void Enter()
         {
-            _referencePoint = _ownerAnimal.GetTargetFood().transform.position;
+            _goToSpeed = _ownerAnimal.Stats.MaxSpeed / 2.0f;
+            _targetObject = _ownerAnimal.GetTargetFood().gameObject;
         }
 
         protected override NodeStatus Execute()
         {
-            if (!_ownerAnimal.MoveToPosition(_referencePoint))
+            _referencePoint = _targetObject.transform.position;
+            if (!_ownerAnimal.MoveToPosition(_referencePoint, _goToSpeed))
             {
                 return NodeStatus.FAILURE;
             }

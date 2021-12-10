@@ -1,27 +1,26 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace BehaviorSim.BehaviorTree
 {
-    public class GoToTargetAnimalNode : AnimalActionNode
+    public class ChaseAnimalNode : AnimalActionNode
     {
 
-        private const float _targetEpsilon = 8.0f;
+        private float _targetEpsilon;
 
-        public GoToTargetAnimalNode() : base("Chase Animal")
+        public ChaseAnimalNode() : base("Chase Animal")
         {
         }
 
         protected override void Enter()
         {
-            _targetObject = _ownerAnimal.GetTargetObject();
+            _targetEpsilon = 8.0f;
+            _targetObject = _ownerAnimal.GetTargetAnimal().gameObject;
         }
 
         protected override NodeStatus Execute()
         {
             Vector3 targetPosition = _targetObject.transform.position;
-            if (!_ownerAnimal.MoveToPosition(targetPosition))
+            if (!_ownerAnimal.MoveToPosition(targetPosition, _ownerAnimal.Stats.MaxSpeed))
             {
                 return NodeStatus.FAILURE;
             }

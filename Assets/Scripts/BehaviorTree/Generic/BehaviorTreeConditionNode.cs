@@ -1,19 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace BehaviorSim.BehaviorTree
+﻿namespace BehaviorSim.BehaviorTree
 {
-    public class ConditionNode : Node
+    public abstract class ConditionNode : Node
     {
-        public ConditionNode(string name) : base(name, true) {
-            _children = null;
+        public ConditionNode(string name) : base(name, NodeType.LEAF)
+        {
         }
 
         // Defines what the condition is, i.e. when the condition node should evaluate to true or false
-        protected virtual bool Condition() {
-            return true;
-        }
+        protected abstract bool Condition();
 
         public override NodeStatus Tick()
         {
@@ -22,5 +16,4 @@ namespace BehaviorSim.BehaviorTree
             return result;
         }
     }
-
 }

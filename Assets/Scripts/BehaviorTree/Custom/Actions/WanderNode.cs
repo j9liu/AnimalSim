@@ -6,7 +6,8 @@ namespace BehaviorSim.BehaviorTree {
     public class WanderNode : AnimalActionNode
     {
         private const float _wanderEpsilon = 2.0f;
-        
+        private const float _wanderSpeed = 3.5f;
+
         public WanderNode() : base("Wander")
         {
         }
@@ -18,7 +19,7 @@ namespace BehaviorSim.BehaviorTree {
         {
             float sightFOV = _ownerAnimal.Stats.SightFOV;
             float sightRadius = _ownerAnimal.Stats.SightRadius;
-            Vector3 direction = _ownerAnimal.GetDirection();
+            Vector3 direction = _ownerAnimal.Direction;
 
             float angle = Random.Range(-sightFOV / 2.0f, sightFOV / 2.0f);
             direction = Quaternion.Euler(0, angle, 0) * direction;
@@ -39,7 +40,7 @@ namespace BehaviorSim.BehaviorTree {
 
         protected override NodeStatus Execute()
         {
-            if (!_ownerAnimal.MoveToPosition(_referencePoint))
+            if (!_ownerAnimal.MoveToPosition(_referencePoint, _wanderSpeed))
             {
                 return NodeStatus.FAILURE;
             }
