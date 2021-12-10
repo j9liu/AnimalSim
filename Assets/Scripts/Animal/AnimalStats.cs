@@ -17,6 +17,7 @@ namespace BehaviorSim
             SightFOV = 270.0f,
             SightRadius = 50.0f,
             HearingRadius = 70.0f,
+            HearingThreshold = 4.5f,
             CollisionRadius = 6.0f,
         };
 
@@ -31,6 +32,7 @@ namespace BehaviorSim
             SightFOV = 270.0f,
             SightRadius = 65.0f,
             HearingRadius = 80.0f,
+            HearingThreshold = 3.5f,
             CollisionRadius = 8.0f,
         };
     }

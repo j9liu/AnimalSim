@@ -16,7 +16,7 @@ namespace BehaviorSim.BehaviorTree
          */
         protected override NodeStatus Execute()
         {
-            Animal targetAnimal = _ownerAnimal.GetClosestPrey(_ownerAnimal.Stats.SightRadius);
+            Animal targetAnimal = _ownerAnimal.GetClosestAnimal(AnimalTypeFilter.PREY_ONLY);
             
             if (targetAnimal != null)
             {

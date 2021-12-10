@@ -10,8 +10,11 @@ namespace BehaviorSim.BehaviorTree {
         }
         protected override bool Condition()
         {
-            
-            Animal predator = _ownerAnimal.GetClosestPredator(_ownerAnimal.Stats.HearingRadius);
+            if (_ownerAnimal.TargetAnimalIsPredator()) {
+                return _ownerAnimal.IsNearTargetObject2D(1.5f * _ownerAnimal.Stats.HearingRadius);
+            }
+
+            Animal predator = _ownerAnimal.GetClosestAnimal(AnimalTypeFilter.PREDATOR_ONLY);
             if (predator != null) {
                 _ownerAnimal.SetTargetAnimal(predator);
                 return true;

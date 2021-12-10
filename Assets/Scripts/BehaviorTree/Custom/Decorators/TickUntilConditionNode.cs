@@ -3,8 +3,9 @@
 namespace BehaviorSim.BehaviorTree {
     public class TickUntilConditionNode : AnimalDecoratorNode
     {
-        private bool entered;
-        protected ConditionNode _condition;
+        private bool _entered;
+        private bool _mustTickOnce;
+        private bool _tickedOnce;
         protected NodeStatus _conditionHaltStatus;
         protected NodeStatus _haltReturnStatus;
 
@@ -16,37 +17,48 @@ namespace BehaviorSim.BehaviorTree {
         public TickUntilConditionNode(string name,
                                       ConditionNode condition,
                                       NodeStatus conditionHaltStatus,
-                                      NodeStatus haltReturnStatus, Node child) : base(name, child)
+                                      NodeStatus haltReturnStatus,
+                                      bool mustTickOnce,
+                                      Node child) : base(name, condition, child)
         {
-            _condition = condition;
             _conditionHaltStatus = conditionHaltStatus;
             _haltReturnStatus = haltReturnStatus;
-            entered = false;
+            _entered = false;
+            _mustTickOnce = mustTickOnce;
+            _tickedOnce = false;
         }
 
         public override NodeStatus Tick()
         {
-            if (!entered)
+            if (!_entered)
             {
                 Enter();
-                entered = true;
+                _entered = true;
             }
 
             NodeStatus conditionStatus = _condition.Tick();
             if (conditionStatus == _conditionHaltStatus)
             {
-                SetStatus(_haltReturnStatus);
                 Exit();
-                entered = false;
-                return _haltReturnStatus;
+                _entered = false;
+                if (_mustTickOnce && !_tickedOnce)
+                {
+                    SetStatus(NodeStatus.FAILURE);
+                    return NodeStatus.FAILURE;
+                }
+                else {
+                    SetStatus(_haltReturnStatus);
+                    return _haltReturnStatus;
+                }
             }
 
             NodeStatus childStatus = _child.Tick();
-
+            _tickedOnce = true;
             if (childStatus != NodeStatus.RUNNING)
             {
                 Exit();
-                entered = false;
+                _tickedOnce = false;
+                _entered = false;
             }
 
             SetStatus(childStatus);

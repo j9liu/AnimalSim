@@ -7,7 +7,7 @@ namespace BehaviorSim.BehaviorTree {
         public SquirrelTree() : base()
         {
             SelectorNode subroot = new SelectorNode("Subroot");
-            DecoratorNode subrootDecorator = new RepeatUntilPredatorNearbyNode(subroot);
+            DecoratorNode subrootDecorator = new TickUntilPredatorNearbyNode(subroot);
 
             SequenceNode hungerRoot = new SequenceNode("Hunger Subtree");
             hungerRoot.AddChild(new FoodLowNode(0.6f));
@@ -21,7 +21,11 @@ namespace BehaviorSim.BehaviorTree {
             ActionNode wander = new WanderNode();
             subroot.AddChild(wander);
 
-            root.AddChild(subroot);
+            ActionNode runFromAnimal = new RunFromAnimalNode();
+            DecoratorNode runFromAnimalDecorator = new TickUntilPredatorNotNearbyNode(runFromAnimal);
+
+            root.AddChild(runFromAnimalDecorator);
+            root.AddChild(subrootDecorator);
             _root = root;
 
             GameObject canvas = GameObject.Find("Canvas"); 

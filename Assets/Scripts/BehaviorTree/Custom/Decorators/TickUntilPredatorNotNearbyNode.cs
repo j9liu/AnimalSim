@@ -1,12 +1,12 @@
 ﻿namespace BehaviorSim.BehaviorTree
 {
-    public class TickUntilPredatorNearbyNode : TickUntilConditionNode
+    public class TickUntilPredatorNotNearbyNode : TickUntilConditionNode
     {
-        public TickUntilPredatorNearbyNode(Node child) : base("Tick Until\n Predator Nearby",
+        public TickUntilPredatorNotNearbyNode(Node child) : base("Tick Until\n Predator Not Nearby",
                                                                 new PredatorNearbyNode(),
-                                                                NodeStatus.SUCCESS,
+                                                                NodeStatus.FAILURE,
                                                                 NodeStatus.HALT,
-                                                                false,
+                                                                true,
                                                                 child)
         {
         }
@@ -15,5 +15,4 @@
             _ownerAnimal.ResetTarget();
         }
     }
-
 }

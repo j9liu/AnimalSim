@@ -21,6 +21,7 @@ namespace BehaviorSim
         public float SightFOV;
         public float SightRadius;
         public float HearingRadius;
+        public float HearingThreshold;
         public float CollisionRadius;
     }
 
@@ -30,7 +31,7 @@ namespace BehaviorSim
         public bool[] Predators;
     }
 
-    public enum AnimalFilter: int {
+    public enum AnimalTypeFilter: int {
         SAME_SPECIES = 0,
         PREY_ONLY = 1,
         PREDATOR_ONLY = 2,
@@ -180,14 +181,19 @@ namespace BehaviorSim
 
         public void ResetTarget()
         {
-            _targetFood.ResetOwner();
+            if (_targetFood != null) {
+                _targetFood.ResetOwner();
+            }
+
             _targetFood = null;
             _targetObject = null;
+            _targetIsPredator = false;
         }
 
         public void SetTargetAnimal(Animal animal) {
             _targetAnimal = animal;
             _targetObject = animal.gameObject;
+            _targetIsPredator = IsEatenBy(_targetAnimal);
         }
 
         public void SetTargetFood(Food food)
@@ -199,6 +205,11 @@ namespace BehaviorSim
         public void SetTargetObject(GameObject obj)
         {
             _targetObject = obj;
+        }
+
+        public bool TargetAnimalIsPredator()
+        {
+            return _targetIsPredator;
         }
 
         private void UpdateStats()
@@ -272,7 +283,6 @@ namespace BehaviorSim
         // TODO: add pathfinding algorithm so it avoids environmental obstacles
         // Attempt to move this animal towards the given position.
         // If the animal cannot successfully move, return false.
-        // ALSO TODO: make radius bigger, perceive predators from a farther distance
         public bool MoveToPosition(Vector3 targetPosition, float speed)
         {
             _behaviorStatus = AnimalBehaviorStatus.MOVING;
@@ -291,11 +301,6 @@ namespace BehaviorSim
                         continue;
                     }
 
-                    Animal neighborAnimal = colliders[i].gameObject.GetComponent<Animal>();
-                    if (!CanEatAnimal(neighborAnimal)) {
-                        continue;
-                    }
-
                     Vector3 direction = colliders[i].transform.position - currentPosition;
                     float distance = direction.magnitude;
                     targetDirection -= (distance - collisionRadius) / collisionRadius * direction;
@@ -304,14 +309,7 @@ namespace BehaviorSim
 
             RotateTowardsDirection(targetDirection);
 
-            if (speed < _currentSpeed)
-            {
-
-                CurrentSpeed = Mathf.SmoothStep(speed, _currentSpeed, speed * Time.deltaTime);
-            }
-            else {
-                CurrentSpeed = Mathf.SmoothStep(_currentSpeed, speed, speed * Time.deltaTime);
-            }
+            CurrentSpeed = speed;
 
             Vector3 desiredPosition = currentPosition + (_currentSpeed * Time.deltaTime * _direction);   
             if (!global.GetGround().IsValidPosition(desiredPosition))
@@ -380,6 +378,22 @@ namespace BehaviorSim
             return FoodChainData.FoodSources[index];
         }
 
+        public bool CanSeeObject(GameObject targetObject) {
+            float halfFOV = Stats.SightFOV / 2.0f;
+            Vector3 objectPosition = targetObject.transform.position;
+            Vector3 objectDirection = objectPosition - transform.position;
+
+            float objectAngle = Mathf.Abs(Vector3.Angle(_direction, objectDirection));
+            float objectDistance = Vector3.Distance(objectPosition, transform.position);
+            return (objectAngle <= halfFOV && objectDistance <= Stats.SightRadius);
+        }
+
+        public bool CanHearAnimal(Animal targetAnimal)
+        {
+            Vector3 animalPosition = targetAnimal.transform.position;
+            float animalDistance = Vector3.Distance(animalPosition, transform.position);
+            return (animalDistance <= Stats.HearingRadius && targetAnimal.CurrentSpeed >= Stats.HearingThreshold);
+        }
 
         public Food GetClosestFood(float radius)
         {
@@ -409,65 +423,53 @@ namespace BehaviorSim
             return targetFood;
         }
 
-        /*public Animal GetClosestAnimal(float radius, bool useSight, bool useHearing, AnimalFilter filter)
+        public Animal GetClosestAnimal(AnimalTypeFilter typeFilter)
         {
-            Animal targetAnimal = null;
-        }*/
+            float maxRadius = Mathf.Max(Stats.SightRadius, Stats.HearingRadius);
 
-        public Animal GetClosestPrey(float radius)
-        {
-            float halfFOV = Stats.SightFOV / 2.0f;
-            float minDistance = radius;
-
-            Animal targetAnimal = null;
-
-            Collider[] animalColliders = Physics.OverlapSphere(transform.position, radius, Global.AnimalLayerMask);
-            foreach (Collider collider in animalColliders)
-            {
-                Vector3 animalPosition = collider.transform.position;
-                Vector3 animalDirection = animalPosition - transform.position;
-                float animalAngle = Mathf.Abs(Vector3.Angle(_direction, animalDirection));
-                float animalDistance = Vector3.Distance(animalPosition, transform.position);
-                if (animalAngle <= halfFOV && animalDistance <= minDistance)
-                {
-                    Animal tempAnimal = collider.gameObject.GetComponent<Animal>();
-                    if (CanEatAnimal(tempAnimal))
-                    {
-                        minDistance = animalDistance;
-                        targetAnimal = tempAnimal;
-                    }
-                }
-            }
-
-            return targetAnimal;
-        }
-
-        public Animal GetClosestPredator(float radius)
-        {
-            float minDistance = radius;
+            float closestDistance = maxRadius;
             Animal closestAnimal = null;
 
-            Collider[] colliders = Physics.OverlapSphere(transform.position, radius, Global.AnimalLayerMask);
+            Collider[] colliders = Physics.OverlapSphere(transform.position, maxRadius, Global.AnimalLayerMask);
             if (colliders.Length > 1)
             {
                 for (int i = 0; i < colliders.Length; i++)
                 {
-                    GameObject temporaryObject = colliders[i].gameObject;
-                    if (temporaryObject == this.gameObject || temporaryObject == _targetObject)
+                    GameObject animalObject = colliders[i].gameObject;
+                    if (animalObject == gameObject || animalObject == _targetObject)
                     {
                         continue;
                     }
 
-                    float distance = Vector3.Distance(colliders[i].transform.position, transform.position);
-                    if (distance < minDistance)
-                    {
-                        Animal animal = temporaryObject.GetComponent<Animal>();
-                        if (!IsEatenBy(animal))
-                        {
-                            continue;
-                        }
+                    Animal animal = animalObject.GetComponent<Animal>();
 
-                        minDistance = distance;
+                    if (!CanSeeObject(animalObject) && !CanHearAnimal(animal)) {
+                        continue;
+                    }
+
+                    bool animalPassesFilter = false;
+                    switch (typeFilter) {
+                        case AnimalTypeFilter.SAME_SPECIES:
+                            animalPassesFilter = (Type == animal.Type); 
+                            break;
+                        case AnimalTypeFilter.PREY_ONLY:
+                            animalPassesFilter = CanEatAnimal(animal);
+                            break;
+                        case AnimalTypeFilter.PREDATOR_ONLY:
+                            animalPassesFilter = IsEatenBy(animal);
+                            break;
+                        case AnimalTypeFilter.DIFFERENT_SPECIES:
+                            animalPassesFilter = (Type != animal.Type);
+                            break;
+                        case AnimalTypeFilter.ALL:
+                            animalPassesFilter = true;
+                            break;
+                    }
+
+                    float distance = Vector3.Distance(animalObject.transform.position, transform.position);
+                    if (animalPassesFilter && distance < closestDistance)
+                    {
+                        closestDistance = distance;
                         closestAnimal = animal;
                     }
                 }

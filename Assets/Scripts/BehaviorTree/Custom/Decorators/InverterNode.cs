@@ -1,7 +1,7 @@
 ﻿namespace BehaviorSim.BehaviorTree {
     public class InverterNode : AnimalDecoratorNode
     {
-        public InverterNode(string name, Node child) : base(name, child)
+        public InverterNode(string name, Node child) : base(name, null, child)
         {
         }
 
