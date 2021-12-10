@@ -16,4 +16,14 @@ This project explores the concept of behavior trees and uses them to simulate si
 
 Behavior trees allow for intuitive construction and organization of agent behavior, as well as reusability across agent types. In my variation of behavior trees, I did not implement a "blackboard" or database that tracks all of the variables in the game's state. Instead, I felt the behavior trees should reflect the intimate knowledge of their animal, and any external knowledge that the animal needs should be accessible through the animal's built-in functionality.
 
+| ![](Images/squirreltree.png) | ![](Images/foxtree.png) |
+| ---| --- |
+| Structure of the squirrel behavior tree. | Structure of the fox behavior tree. |
+
+
+| ![](Images/foxtreeruntime.png) |
+| --- |
+| Debug view of a behavior tree being evaluated at runtime. |
+
+
 This project is not polished and I would like to make numerous improvements to it. I will maintain a list of these tasks [here](Docs/TODO.md).
