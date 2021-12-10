@@ -2,31 +2,25 @@
 
 namespace BehaviorSim.BehaviorTree
 {
-    public class FindNearbyPreyNode : AnimalActionNode
+    public class IsPreyNearbyNode : AnimalConditionNode
     {
         private const int _animalLayerMask = 1 << 8;
 
-        public FindNearbyPreyNode() : base("Find Nearby Prey")
+        public IsPreyNearbyNode() : base("Is Prey Nearby?")
         {
         }
 
-        /*
-         * This is essentially a condition node with extra steps. If a food object is found,
-         * the tree ensures it remains in the Animal's memory for the next step in the tree.
-         */
-        protected override NodeStatus Execute()
+        protected override bool Condition()
         {
             Animal targetAnimal = _ownerAnimal.GetClosestAnimal(AnimalTypeFilter.PREY_ONLY);
-            
             if (targetAnimal != null)
             {
                 _ownerAnimal.SetTargetAnimal(targetAnimal);
-                return NodeStatus.SUCCESS;
+                return true;
             }
 
-            return NodeStatus.FAILURE;
+            return false;
         }
-
     }
 }
 

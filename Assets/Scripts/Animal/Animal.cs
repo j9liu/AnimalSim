@@ -301,6 +301,11 @@ namespace BehaviorSim
                         continue;
                     }
 
+                    Animal animal = temporaryObject.GetComponent<Animal>();
+                    if (CanEatAnimal(animal)) {
+                        continue;
+                    }
+
                     Vector3 direction = colliders[i].transform.position - currentPosition;
                     float distance = direction.magnitude;
                     targetDirection -= (distance - collisionRadius) / collisionRadius * direction;
@@ -453,7 +458,7 @@ namespace BehaviorSim
                             animalPassesFilter = (Type == animal.Type); 
                             break;
                         case AnimalTypeFilter.PREY_ONLY:
-                            animalPassesFilter = CanEatAnimal(animal);
+                            animalPassesFilter = CanEatAnimal(animal) && !animal.TargetAnimalIsPredator();
                             break;
                         case AnimalTypeFilter.PREDATOR_ONLY:
                             animalPassesFilter = IsEatenBy(animal);

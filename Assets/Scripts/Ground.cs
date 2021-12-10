@@ -32,8 +32,8 @@ public class Ground : MonoBehaviour
     // A position is valid if it is within the bounds of the padded ground plane.
     public bool IsValidPosition(Vector3 position)
     {
-        return position.x >= minimumPaddedCorner.x && position.z >= minimumPaddedCorner.z
-            && position.x <= maximumPaddedCorner.x && position.z <= maximumPaddedCorner.z;
+        return position.x > minimumPaddedCorner.x && position.z > minimumPaddedCorner.z
+            && position.x < maximumPaddedCorner.x && position.z < maximumPaddedCorner.z;
     }
 
     public Vector3 ClampPosition(Vector3 position)
