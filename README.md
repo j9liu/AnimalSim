@@ -8,7 +8,7 @@
 ---------------
 
 This project explores the concept of behavior trees and uses them to simulate simple animal behavior Unity. It is inspired by the gameplay and aesthetic of _[SimAnimals](https://en.wikipedia.org/wiki/SimAnimals)_, which is an animalistic version of _The Sims_ that takes place in a woodland setting. In summary, this repository:
-- provides generic `Node` and `Tree` definitions as an basic framework for behavior trees (see [Assets/Scripts/BehaviorTree](https://github.com/j9liu/AnimalSim/tree/main/Assets/Scripts/BehaviorTree)).
+- provides generic `Node` and `Tree` definitions as a basic framework for behavior trees (see [Assets/Scripts/BehaviorTree](https://github.com/j9liu/AnimalSim/tree/main/Assets/Scripts/BehaviorTree)).
 - adapts these generic classes for animal behavior by:
   -  defining `Condition`s and `Action`s for use and reuse by multiple animals, e.g. `Wander` and `FoodLow`.
   -  structuring behavior trees for each animal species based on these custom nodes.
