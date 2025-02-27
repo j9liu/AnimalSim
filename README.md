@@ -1,8 +1,4 @@
-# Animal Simulation with Behavior Trees
-
-**University of Pennsylvania, Senior Design Project (in-progress)** by Janine Liu
-
-[LinkedIn](https://www.linkedin.com/in/liujanine/) | [Website](https://www.janineliu.com/)
+# (WIP) Animal Simulation with Behavior Trees
 
 ![](Images/fox_eating.png)
 ---------------
